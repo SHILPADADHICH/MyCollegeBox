@@ -151,7 +151,7 @@ export default function HomePage() {
     <Ionicons name="compass-outline" size={22} color="#B0B0B0" />
     <Text style={styles.navLabel}>Explore</Text>
   </TouchableOpacity>
-  <TouchableOpacity style={styles.navItem} onPress={() => router.push("/upload")}>
+  <TouchableOpacity style={styles.navItem} onPress={() => router.push("/UploadSelectPage")}>
     <Ionicons name="add-circle-outline" size={26} color="#B0B0B0" />
     <Text style={styles.navLabel}>Upload</Text>
   </TouchableOpacity>
