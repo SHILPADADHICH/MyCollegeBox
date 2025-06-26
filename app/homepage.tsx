@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "expo-router";
 import {
   View,
   Text,
@@ -141,27 +142,45 @@ export default function HomePage() {
 
         {/* Bottom Nav */}
         <View style={styles.bottomNav}>
-          <View style={styles.navItemActive}>
-            <Ionicons name="home" size={22} color="#4D8DFF" />
-            <Text style={styles.navLabelActive}>Home</Text>
-          </View>
-          <View style={styles.navItem}>
-            <Ionicons name="compass-outline" size={22} color="#B0B0B0" />
-            <Text style={styles.navLabel}>Explore</Text>
-          </View>
-          <View style={styles.navItem}>
-            <Ionicons name="add-circle-outline" size={26} color="#B0B0B0" />
-            <Text style={styles.navLabel}>Upload</Text>
-          </View>
-          <View style={styles.navItem}>
-            <Ionicons name="chatbubble-ellipses-outline" size={22} color="#B0B0B0" />
-            <Text style={styles.navLabel}>Messages</Text>
-          </View>
-          <View style={styles.navItem}>
-            <Ionicons name="person-outline" size={22} color="#B0B0B0" />
-            <Text style={styles.navLabel}>Profile</Text>
-          </View>
-        </View>
+  {/* Home (Active Tab) */}
+  <View style={styles.navItemActive}>
+    <Ionicons name="home" size={22} color="#4D8DFF" />
+    <Text style={styles.navLabelActive}>Home</Text>
+  </View>
+
+  {/* Explore */}
+  <Link href="/explore" asChild>
+    <TouchableOpacity style={styles.navItem}>
+      <Ionicons name="compass-outline" size={22} color="#B0B0B0" />
+      <Text style={styles.navLabel}>Explore</Text>
+    </TouchableOpacity>
+  </Link>
+
+  {/* Upload */}
+  <Link href="/UploadSelectPage" asChild>
+    <TouchableOpacity style={styles.navItem}>
+      <Ionicons name="add-circle-outline" size={26} color="#B0B0B0" />
+      <Text style={styles.navLabel}>Upload</Text>
+    </TouchableOpacity>
+  </Link>
+
+  {/* Messages */}
+  <Link href="/messages" asChild>
+    <TouchableOpacity style={styles.navItem}>
+      <Ionicons name="chatbubble-ellipses-outline" size={22} color="#B0B0B0" />
+      <Text style={styles.navLabel}>Messages</Text>
+    </TouchableOpacity>
+  </Link>
+
+  {/* Profile */}
+  <Link href="/profile" asChild>
+    <TouchableOpacity style={styles.navItem}>
+      <Ionicons name="person-outline" size={22} color="#B0B0B0" />
+      <Text style={styles.navLabel}>Profile</Text>
+    </TouchableOpacity>
+  </Link>
+</View>
+
       </View>
     </SafeAreaView>
   );
