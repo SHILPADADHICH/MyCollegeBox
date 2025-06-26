@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -9,51 +9,79 @@ import {
   TouchableOpacity,
   FlatList,
   Dimensions,
-} from 'react-native';
-import { Link } from 'expo-router';
-import { Ionicons, MaterialIcons, FontAwesome5, Feather } from '@expo/vector-icons';
+} from "react-native";
+import { Link } from "expo-router";
+import {
+  Ionicons,
+  MaterialIcons,
+  FontAwesome5,
+  Feather,
+} from "@expo/vector-icons";
 
-const { width } = Dimensions.get('window');
+const { width } = Dimensions.get("window");
 
 const FILTERS = [
-  { label: 'Rent', icon: <MaterialIcons name="attach-money" size={18} color="#4D8DFF" /> },
-  { label: 'Single', icon: <Ionicons name="person" size={16} color="#4D8DFF" /> },
-  { label: 'Double', icon: <Ionicons name="people" size={16} color="#4D8DFF" /> },
-  { label: 'Triple', icon: <Ionicons name="people-circle" size={16} color="#4D8DFF" /> },
-  { label: 'Wi-Fi', icon: <Feather name="wifi" size={16} color="#4D8DFF" /> },
-  { label: 'AC', icon: <MaterialIcons name="ac-unit" size={16} color="#4D8DFF" /> },
-  { label: 'Washing Machine', icon: <MaterialIcons name="local-laundry-service" size={16} color="#4D8DFF" /> },
-  { label: 'Male', icon: <Ionicons name="male" size={16} color="#4D8DFF" /> },
-  { label: 'Female', icon: <Ionicons name="female" size={16} color="#4D8DFF" /> },
+  {
+    label: "Rent",
+    icon: <MaterialIcons name="attach-money" size={18} color="#4D8DFF" />,
+  },
+  {
+    label: "Single",
+    icon: <Ionicons name="person" size={16} color="#4D8DFF" />,
+  },
+  {
+    label: "Double",
+    icon: <Ionicons name="people" size={16} color="#4D8DFF" />,
+  },
+  {
+    label: "Triple",
+    icon: <Ionicons name="people-circle" size={16} color="#4D8DFF" />,
+  },
+  { label: "Wi-Fi", icon: <Feather name="wifi" size={16} color="#4D8DFF" /> },
+  {
+    label: "AC",
+    icon: <MaterialIcons name="ac-unit" size={16} color="#4D8DFF" />,
+  },
+  {
+    label: "Washing Machine",
+    icon: (
+      <MaterialIcons name="local-laundry-service" size={16} color="#4D8DFF" />
+    ),
+  },
+  { label: "Male", icon: <Ionicons name="male" size={16} color="#4D8DFF" /> },
+  {
+    label: "Female",
+    icon: <Ionicons name="female" size={16} color="#4D8DFF" />,
+  },
 ];
 
 const ROOMS = [
   {
-    id: '1',
-    title: 'Cozy Triple Sharing',
-    rent: '₹6,000/mo',
-    image: require('../assets/images/campus.png'),
-    sharing: 'Triple',
-    gender: 'Male',
-    amenities: ['Wi-Fi', 'AC', 'Washing Machine'],
+    id: "1",
+    title: "Cozy Triple Sharing",
+    rent: "₹6,000/mo",
+    image: require("../assets/images/campus.png"),
+    sharing: "Triple",
+    gender: "Male",
+    amenities: ["Wi-Fi", "AC", "Washing Machine"],
   },
   {
-    id: '2',
-    title: 'Single Room with Balcony',
-    rent: '₹10,500/mo',
-    image: require('../assets/images/notes.png'),
-    sharing: 'Single',
-    gender: 'Female',
-    amenities: ['Wi-Fi', 'AC'],
+    id: "2",
+    title: "Single Room with Balcony",
+    rent: "₹10,500/mo",
+    image: require("../assets/images/notes.png"),
+    sharing: "Single",
+    gender: "Female",
+    amenities: ["Wi-Fi", "AC"],
   },
   {
-    id: '3',
-    title: 'Double Sharing Deluxe',
-    rent: '₹8,200/mo',
-    image: require('../assets/images/connect.png'),
-    sharing: 'Double',
-    gender: 'Any',
-    amenities: ['Wi-Fi'],
+    id: "3",
+    title: "Double Sharing Deluxe",
+    rent: "₹8,200/mo",
+    image: require("../assets/images/connect.png"),
+    sharing: "Double",
+    gender: "Any",
+    amenities: ["Wi-Fi"],
   },
 ];
 
@@ -64,8 +92,8 @@ const GENDER_ICONS = {
 };
 
 export default function ExploreScreen() {
-  const [activeTab, setActiveTab] = useState('List');
-  const [search, setSearch] = useState('');
+  const [activeTab, setActiveTab] = useState("List");
+  const [search, setSearch] = useState("");
   const [selectedFilters, setSelectedFilters] = useState([]);
 
   const toggleFilter = (label) => {
@@ -81,23 +109,42 @@ export default function ExploreScreen() {
         <Text style={styles.screenTitle}>Explore</Text>
         <View style={styles.tabSwitch}>
           <TouchableOpacity
-            style={[styles.tabBtn, activeTab === 'List' && styles.tabBtnActive]}
-            onPress={() => setActiveTab('List')}
+            style={[styles.tabBtn, activeTab === "List" && styles.tabBtnActive]}
+            onPress={() => setActiveTab("List")}
           >
-            <Text style={[styles.tabText, activeTab === 'List' && styles.tabTextActive]}>List</Text>
+            <Text
+              style={[
+                styles.tabText,
+                activeTab === "List" && styles.tabTextActive,
+              ]}
+            >
+              List
+            </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.tabBtn, activeTab === 'Map' && styles.tabBtnActive]}
-            onPress={() => setActiveTab('Map')}
+            style={[styles.tabBtn, activeTab === "Map" && styles.tabBtnActive]}
+            onPress={() => setActiveTab("Map")}
           >
-            <Text style={[styles.tabText, activeTab === 'Map' && styles.tabTextActive]}>Map</Text>
+            <Text
+              style={[
+                styles.tabText,
+                activeTab === "Map" && styles.tabTextActive,
+              ]}
+            >
+              Map
+            </Text>
           </TouchableOpacity>
         </View>
       </View>
 
       {/* Search Bar */}
       <View style={styles.searchBarWrapper}>
-        <Ionicons name="location-outline" size={20} color="#B0B0B0" style={{ marginLeft: 10 }} />
+        <Ionicons
+          name="location-outline"
+          size={20}
+          color="#B0B0B0"
+          style={{ marginLeft: 10 }}
+        />
         <TextInput
           style={styles.searchBar}
           placeholder="Search by location, PG, or area"
@@ -105,36 +152,50 @@ export default function ExploreScreen() {
           value={search}
           onChangeText={setSearch}
         />
-        <Ionicons name="search" size={20} color="#4D8DFF" style={{ marginRight: 10 }} />
+        <Ionicons
+          name="search"
+          size={20}
+          color="#4D8DFF"
+          style={{ marginRight: 10 }}
+        />
       </View>
 
       {/* Filter Chips */}
-      <FlatList
-        data={FILTERS}
-        keyExtractor={(item) => item.label}
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ gap: 10, paddingHorizontal: 10, marginVertical: 12 }}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            style={[styles.chip, selectedFilters.includes(item.label) && styles.chipActive]}
-            onPress={() => toggleFilter(item.label)}
-          >
-            {item.icon}
-            <Text
+      <View>
+        <FlatList
+          data={FILTERS}
+          keyExtractor={(item) => item.label}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{
+            gap: 10,
+            paddingHorizontal: 10,
+            marginVertical: 12,
+          }}
+          renderItem={({ item }) => (
+            <TouchableOpacity
               style={[
-                styles.chipText,
-                selectedFilters.includes(item.label) && styles.chipTextActive,
+                styles.chip,
+                selectedFilters.includes(item.label) && styles.chipActive,
               ]}
+              onPress={() => toggleFilter(item.label)}
             >
-              {item.label}
-            </Text>
-          </TouchableOpacity>
-        )}
-      />
+              {item.icon}
+              <Text
+                style={[
+                  styles.chipText,
+                  selectedFilters.includes(item.label) && styles.chipTextActive,
+                ]}
+              >
+                {item.label}
+              </Text>
+            </TouchableOpacity>
+          )}
+        />
+      </View>
 
       {/* Room Cards or Map */}
-      {activeTab === 'List' ? (
+      {activeTab === "List" ? (
         <ScrollView showsVerticalScrollIndicator={false} style={{ flex: 1 }}>
           {ROOMS.map((room) => (
             <View key={room.id} style={styles.roomCard}>
@@ -153,9 +214,17 @@ export default function ExploreScreen() {
                   </View>
                   {room.amenities.map((am, idx) => (
                     <View key={idx} style={styles.metaItem}>
-                      {am === 'Wi-Fi' && <Feather name="wifi" size={15} color="#4D8DFF" />}
-                      {am === 'AC' && <MaterialIcons name="ac-unit" size={15} color="#4D8DFF" />}
-                      {am === 'Washing Machine' && (
+                      {am === "Wi-Fi" && (
+                        <Feather name="wifi" size={15} color="#4D8DFF" />
+                      )}
+                      {am === "AC" && (
+                        <MaterialIcons
+                          name="ac-unit"
+                          size={15}
+                          color="#4D8DFF"
+                        />
+                      )}
+                      {am === "Washing Machine" && (
                         <MaterialIcons
                           name="local-laundry-service"
                           size={15}
@@ -179,7 +248,7 @@ export default function ExploreScreen() {
           <Ionicons name="map-outline" size={64} color="#B0B0B0" />
           <Text
             style={{
-              color: '#B0B0B0',
+              color: "#B0B0B0",
               fontSize: 16,
               marginTop: 8,
             }}
@@ -191,7 +260,7 @@ export default function ExploreScreen() {
 
       {/* Bottom Nav */}
       <View style={styles.bottomNav}>
-        <Link href="homepage" asChild>
+        <Link href="/homepage" asChild>
           <TouchableOpacity style={styles.navItem}>
             <Ionicons name="home" size={24} color="#B0B0B0" />
             <Text style={styles.navLabel}>Home</Text>
@@ -211,7 +280,11 @@ export default function ExploreScreen() {
         </Link>
         <Link href="/messages" asChild>
           <TouchableOpacity style={styles.navItem}>
-            <Ionicons name="chatbubble-ellipses-outline" size={24} color="#B0B0B0" />
+            <Ionicons
+              name="chatbubble-ellipses-outline"
+              size={24}
+              color="#B0B0B0"
+            />
             <Text style={styles.navLabel}>Messages</Text>
           </TouchableOpacity>
         </Link>
@@ -230,35 +303,35 @@ const styles = StyleSheet.create({
   // (same styles as your code, no changes needed)
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     paddingTop: 48,
   },
   topBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: 20,
     marginBottom: 8,
   },
   screenTitle: {
     fontSize: 22,
-    fontWeight: '700',
-    color: '#222',
+    fontWeight: "700",
+    color: "#222",
   },
   tabSwitch: {
-    flexDirection: 'row',
-    backgroundColor: '#F2F6FA',
+    flexDirection: "row",
+    backgroundColor: "#F2F6FA",
     borderRadius: 16,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   tabBtn: {
     paddingVertical: 2,
     paddingHorizontal: 18,
   },
   tabBtnActive: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 16,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOpacity: 0.06,
     shadowRadius: 4,
     shadowOffset: { width: 0, height: 2 },
@@ -266,16 +339,16 @@ const styles = StyleSheet.create({
   },
   tabText: {
     fontSize: 15,
-    color: '#B0B0B0',
-    fontWeight: '600',
+    color: "#B0B0B0",
+    fontWeight: "600",
   },
   tabTextActive: {
-    color: '#4D8DFF',
+    color: "#4D8DFF",
   },
   searchBarWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F7FAFF',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#F7FAFF",
     borderRadius: 16,
     marginHorizontal: 20,
     marginTop: 8,
@@ -286,137 +359,138 @@ const styles = StyleSheet.create({
     fontSize: 15,
     borderRadius: 16,
     paddingHorizontal: 12,
-    color: '#222',
+    color: "#222",
   },
   chip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F2F6FA',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#F2F6FA",
     borderRadius: 16,
     paddingHorizontal: 14,
     paddingVertical: 7,
     height: 50,
   },
   chipActive: {
-    backgroundColor: '#4D8DFF',
+    backgroundColor: "#4D8DFF",
   },
   chipText: {
     fontSize: 14,
-    color: '#4D8DFF',
+    color: "#4D8DFF",
     marginLeft: 6,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   chipTextActive: {
-    color: '#fff',
+    color: "#fff",
   },
   roomCard: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 18,
+    marginTop: 20,
     marginHorizontal: 18,
     marginBottom: 22,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOpacity: 0.07,
     shadowRadius: 10,
     shadowOffset: { width: 0, height: 4 },
     elevation: 3,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   roomImage: {
-    width: '100%',
+    width: "100%",
     height: width * 0.42,
-    resizeMode: 'cover',
+    resizeMode: "cover",
   },
   roomInfo: {
     padding: 16,
   },
   roomTitle: {
     fontSize: 17,
-    fontWeight: '700',
-    color: '#222',
+    fontWeight: "700",
+    color: "#222",
     marginBottom: 2,
   },
   roomRent: {
     fontSize: 15,
-    color: '#4D8DFF',
-    fontWeight: '600',
+    color: "#4D8DFF",
+    fontWeight: "600",
     marginBottom: 8,
   },
   roomMetaRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 10,
     gap: 12,
-    flexWrap: 'wrap',
+    flexWrap: "wrap",
   },
   metaItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginRight: 10,
     gap: 3,
   },
   metaText: {
     fontSize: 13,
-    color: '#555',
+    color: "#555",
     marginLeft: 3,
   },
   contactBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#4D8DFF',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#4D8DFF",
     borderRadius: 12,
     paddingVertical: 8,
     paddingHorizontal: 18,
-    alignSelf: 'flex-start',
+    alignSelf: "flex-start",
     marginTop: 4,
   },
   contactBtnText: {
     fontSize: 14,
-    color: '#fff',
-    fontWeight: '600',
+    color: "#fff",
+    fontWeight: "600",
     marginLeft: 7,
   },
   mapViewPlaceholder: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     marginTop: 40,
   },
   bottomNav: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-around",
+    alignItems: "center",
     height: 64,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderTopLeftRadius: 18,
     borderTopRightRadius: 18,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOpacity: 0.06,
     shadowRadius: 8,
     shadowOffset: { width: 0, height: -2 },
     elevation: 8,
   },
   navItem: {
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     flex: 1,
   },
   navItemActive: {
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     flex: 1,
     borderTopWidth: 2,
-    borderTopColor: '#4D8DFF',
-    backgroundColor: '#F7FAFF',
+    borderTopColor: "#4D8DFF",
+    backgroundColor: "#F7FAFF",
   },
   navLabel: {
     fontSize: 12,
-    color: '#B0B0B0',
+    color: "#B0B0B0",
     marginTop: 2,
   },
   navLabelActive: {
     fontSize: 12,
-    color: '#4D8DFF',
+    color: "#4D8DFF",
     marginTop: 2,
-    fontWeight: '700',
+    fontWeight: "700",
   },
 });
