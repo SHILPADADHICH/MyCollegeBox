@@ -44,15 +44,15 @@ const featureCards = [
 
 const trendingNotes = [
   {
-    title: "Trendio Notes",
-    desc: "Bol Upapact Rogkol Mony Fhenart Psy CGlutsoip",
-    price: "222 For Bom",
+    title: "Note 1",
+    desc: "Note description.",
+    price: null,
     image: require("../assets/images/notes.png"),
     priceColor: "#FF6B6B",
   },
   {
-    title: "Teending Notes",
-    desc: "Noocterda gyomio Olofi Robiepat Plymaclte.",
+    title: "Note 2",
+    desc: "Note description.",
     price: null,
     image: require("../assets/images/campus.png"),
     priceColor: null,
@@ -74,7 +74,7 @@ export default function HomePage() {
         <View style={styles.header}>
           <View style={{ flex: 1 }}>
             <Text style={styles.title}>MyCollegeBox</Text>
-            <Text style={styles.greeting}>Hi, Shilpa 👋</Text>
+            <Text style={styles.greeting}>Hi, User 👋</Text>
           </View>
           <Image
             source={{ uri: "https://randomuser.me/api/portraits/women/44.jpg" }}
