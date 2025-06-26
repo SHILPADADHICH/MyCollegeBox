@@ -8,6 +8,8 @@ import {
 } from '@expo-google-fonts/poppins';
 import { useCallback } from 'react';
 import { View } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+
 
 SplashScreen.preventAutoHideAsync();
 
@@ -27,8 +29,13 @@ export default function RootLayout() {
   if (!fontsLoaded) return null;
 
   return (
+    <SafeAreaProvider>
+     
+   
     <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
+    
       <Stack screenOptions={{ headerShown: false }} />
     </View>
+     </SafeAreaProvider>
   );
 }
