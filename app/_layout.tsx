@@ -30,7 +30,12 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider>
+<<<<<<< HEAD
       
+=======
+     
+   
+>>>>>>> ecc88cfa7bb885ef75ead6cd1bc7a40d9c2bd0f0
     <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
     
       <Stack screenOptions={{ headerShown: false }} />
