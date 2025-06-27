@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "expo-router";
 import {
   View,
@@ -17,7 +17,8 @@ import {
   FontAwesome5,
   Feather,
 } from "@expo/vector-icons";
-import { useRouter } from "expo-router"; 
+import { useRouter } from "expo-router";
+import { supabase } from "../utils/supabase";
 
 const featureCards = [
   {
@@ -25,21 +26,21 @@ const featureCards = [
     label: "Form",
     icon: <MaterialIcons name="upload-file" size={26} color="#FF6B6B" />,
     bg: "#FFF0F0",
-    route: "/sharenotes", 
+    route: "/sharenotes",
   },
   {
     title: "Buy/Sell Books",
     label: "Marketplace",
     icon: <FontAwesome5 name="book" size={24} color="#4D8DFF" />,
     bg: "#F0F6FF",
-    route: "/marketplace", 
+    route: "/marketplace",
   },
   {
     title: "Upcoming Events",
     label: "Calendar",
     icon: <Feather name="calendar" size={26} color="#FFB800" />,
     bg: "#FFF8E1",
-    route: "/UpcomingEvents", 
+    route: "/UpcomingEvents",
   },
 ];
 
@@ -61,10 +62,30 @@ const trendingNotes = [
 ];
 
 export default function HomePage() {
-  const router = useRouter(); 
+  const router = useRouter();
+  const [userName, setUserName] = useState("");
+
+  useEffect(() => {
+    const fetchUserName = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (user) {
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("full_name")
+          .eq("id", user.id)
+          .single();
+        if (data && data.full_name) {
+          setUserName(data.full_name);
+        }
+      }
+    };
+    fetchUserName();
+  }, []);
 
   const handleCardPress = (route) => {
-    router.push(route); 
+    router.push(route);
   };
 
   return (
@@ -75,7 +96,9 @@ export default function HomePage() {
         <View style={styles.header}>
           <View style={{ flex: 1 }}>
             <Text style={styles.title}>MyCollegeBox</Text>
-            <Text style={styles.greeting}>Hi, User 👋</Text>
+            <Text style={styles.greeting}>
+              Hi, {userName ? userName : "User"} 👋
+            </Text>
           </View>
           <Image
             source={{ uri: "https://randomuser.me/api/portraits/women/44.jpg" }}
@@ -142,28 +165,44 @@ export default function HomePage() {
 
         {/* Bottom Nav */}
         {/* Bottom Nav */}
-<View style={styles.bottomNav}>
-  <View style={styles.navItemActive}>
-    <Ionicons name="home" size={22} color="#4D8DFF" />
-    <Text style={styles.navLabelActive}>Home</Text>
-  </View>
-  <TouchableOpacity style={styles.navItem} onPress={() => router.push("/explore")}>
-    <Ionicons name="compass-outline" size={22} color="#B0B0B0" />
-    <Text style={styles.navLabel}>Explore</Text>
-  </TouchableOpacity>
-  <TouchableOpacity style={styles.navItem} onPress={() => router.push("/UploadSelectPage")}>
-    <Ionicons name="add-circle-outline" size={26} color="#B0B0B0" />
-    <Text style={styles.navLabel}>Upload</Text>
-  </TouchableOpacity>
-  <TouchableOpacity style={styles.navItem} onPress={() => router.push("/messages")}>
-    <Ionicons name="chatbubble-ellipses-outline" size={22} color="#B0B0B0" />
-    <Text style={styles.navLabel}>Messages</Text>
-  </TouchableOpacity>
-  <TouchableOpacity style={styles.navItem} onPress={() => router.push("/profile")}>
-    <Ionicons name="person-outline" size={22} color="#B0B0B0" />
-    <Text style={styles.navLabel}>Profile</Text>
-  </TouchableOpacity>
-</View>
+        <View style={styles.bottomNav}>
+          <View style={styles.navItemActive}>
+            <Ionicons name="home" size={22} color="#4D8DFF" />
+            <Text style={styles.navLabelActive}>Home</Text>
+          </View>
+          <TouchableOpacity
+            style={styles.navItem}
+            onPress={() => router.push("/explore")}
+          >
+            <Ionicons name="compass-outline" size={22} color="#B0B0B0" />
+            <Text style={styles.navLabel}>Explore</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.navItem}
+            onPress={() => router.push("/UploadSelectPage")}
+          >
+            <Ionicons name="add-circle-outline" size={26} color="#B0B0B0" />
+            <Text style={styles.navLabel}>Upload</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.navItem}
+            onPress={() => router.push("/messages")}
+          >
+            <Ionicons
+              name="chatbubble-ellipses-outline"
+              size={22}
+              color="#B0B0B0"
+            />
+            <Text style={styles.navLabel}>Messages</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.navItem}
+            onPress={() => router.push("/profile")}
+          >
+            <Ionicons name="person-outline" size={22} color="#B0B0B0" />
+            <Text style={styles.navLabel}>Profile</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </SafeAreaView>
   );
