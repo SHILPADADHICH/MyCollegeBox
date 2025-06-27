@@ -131,7 +131,7 @@ export default function SignUp() {
       setIsLoading(false);
       Alert.alert(
         "Success!",
-        "Account created successfully! Please check your email to verify your account.",
+        "Account created successfully!",
         [{ text: "OK", onPress: () => router.push("./signin") }]
       );
     } catch (err: any) {
