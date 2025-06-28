@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -9,49 +9,50 @@ import {
   TouchableOpacity,
   FlatList,
   Dimensions,
+  ActivityIndicator,
+  Alert,
 } from "react-native";
-import { Link } from "expo-router";
+import { Link, useRouter } from "expo-router";
 import {
   Ionicons,
   MaterialIcons,
   FontAwesome5,
   Feather,
 } from "@expo/vector-icons";
+import { notesService } from "../utils/notesService";
+import { NoteWithUser } from "../types/notes";
+import { ProfileIcon } from "../components/ProfileIcon";
 
 const { width } = Dimensions.get("window");
 
 const FILTERS = [
   {
-    label: "Rent",
-    icon: <MaterialIcons name="attach-money" size={18} color="#4D8DFF" />,
+    label: "All",
+    icon: <Ionicons name="apps" size={18} color="#4D8DFF" />,
   },
   {
-    label: "Single",
-    icon: <Ionicons name="person" size={16} color="#4D8DFF" />,
+    label: "PDF",
+    icon: <MaterialIcons name="picture-as-pdf" size={18} color="#FF6B6B" />,
   },
   {
-    label: "Double",
-    icon: <Ionicons name="people" size={16} color="#4D8DFF" />,
+    label: "Image",
+    icon: <Ionicons name="image" size={18} color="#4D8DFF" />,
   },
   {
-    label: "Triple",
-    icon: <Ionicons name="people-circle" size={16} color="#4D8DFF" />,
-  },
-  { label: "Wi-Fi", icon: <Feather name="wifi" size={16} color="#4D8DFF" /> },
-  {
-    label: "AC",
-    icon: <MaterialIcons name="ac-unit" size={16} color="#4D8DFF" />,
+    label: "Computer Science",
+    icon: <MaterialIcons name="computer" size={18} color="#4D8DFF" />,
   },
   {
-    label: "Washing Machine",
-    icon: (
-      <MaterialIcons name="local-laundry-service" size={16} color="#4D8DFF" />
-    ),
+    label: "Engineering",
+    icon: <MaterialIcons name="engineering" size={18} color="#4D8DFF" />,
   },
-  { label: "Male", icon: <Ionicons name="male" size={16} color="#4D8DFF" /> },
   {
-    label: "Female",
-    icon: <Ionicons name="female" size={16} color="#4D8DFF" />,
+    label: "Mathematics",
+    icon: <MaterialIcons name="functions" size={18} color="#4D8DFF" />,
+  },
+  {
+    label: "Physics",
+    icon: <MaterialIcons name="science" size={18} color="#4D8DFF" />,
   },
 ];
 
@@ -92,21 +93,197 @@ const GENDER_ICONS = {
 };
 
 export default function ExploreScreen() {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState("List");
   const [search, setSearch] = useState("");
-  const [selectedFilters, setSelectedFilters] = useState([]);
+  const [selectedFilters, setSelectedFilters] = useState(["All"]);
+  const [notes, setNotes] = useState<NoteWithUser[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searching, setSearching] = useState(false);
 
-  const toggleFilter = (label) => {
-    setSelectedFilters((prev) =>
-      prev.includes(label) ? prev.filter((f) => f !== label) : [...prev, label]
-    );
+  useEffect(() => {
+    fetchNotes();
+  }, []);
+
+  useEffect(() => {
+    if (search.trim()) {
+      handleSearch();
+    } else {
+      fetchNotes();
+    }
+  }, [search]);
+
+  const fetchNotes = async () => {
+    try {
+      setLoading(true);
+      const allNotes = await notesService.getNotes();
+      setNotes(allNotes);
+    } catch (error) {
+      console.error("Error fetching notes:", error);
+      Alert.alert("Error", "Failed to load notes");
+    } finally {
+      setLoading(false);
+    }
   };
+
+  const handleSearch = async () => {
+    if (!search.trim()) return;
+
+    try {
+      setSearching(true);
+      const searchResults = await notesService.searchNotes(search.trim());
+      setNotes(searchResults);
+    } catch (error) {
+      console.error("Search error:", error);
+      Alert.alert("Error", "Failed to search notes");
+    } finally {
+      setSearching(false);
+    }
+  };
+
+  const toggleFilter = (label: string) => {
+    if (label === "All") {
+      setSelectedFilters(["All"]);
+    } else {
+      setSelectedFilters((prev) => {
+        const newFilters = prev.filter((f) => f !== "All");
+        if (prev.includes(label)) {
+          return newFilters.filter((f) => f !== label);
+        } else {
+          return [...newFilters, label];
+        }
+      });
+    }
+  };
+
+  const getFilteredNotes = () => {
+    if (selectedFilters.includes("All")) {
+      return notes;
+    }
+
+    return notes.filter((note) => {
+      // File type filter
+      if (selectedFilters.includes("PDF") && note.file_type === "pdf") {
+        return true;
+      }
+      if (selectedFilters.includes("Image") && note.file_type === "image") {
+        return true;
+      }
+
+      // Subject filter
+      if (
+        selectedFilters.some(
+          (filter) =>
+            [
+              "Computer Science",
+              "Engineering",
+              "Mathematics",
+              "Physics",
+            ].includes(filter) &&
+            note.subject?.toLowerCase().includes(filter.toLowerCase())
+        )
+      ) {
+        return true;
+      }
+
+      return false;
+    });
+  };
+
+  const handleNotePress = (note: NoteWithUser) => {
+    router.push(`/note/${note.id}` as any);
+  };
+
+  const handleDownload = async (note: NoteWithUser) => {
+    try {
+      await notesService.downloadNoteFile(note.id);
+      Alert.alert("Success", "Note downloaded successfully!");
+      // Refresh notes to update download count
+      fetchNotes();
+    } catch (error) {
+      console.error("Download error:", error);
+      Alert.alert("Error", "Failed to download note");
+    }
+  };
+
+  const getFileTypeIcon = (fileType: string) => {
+    return fileType === "pdf" ? "document-text" : "image";
+  };
+
+  const renderNoteCard = ({ item: note }: { item: NoteWithUser }) => (
+    <TouchableOpacity
+      style={styles.noteCard}
+      onPress={() => handleNotePress(note)}
+    >
+      <View style={styles.noteHeader}>
+        <View style={styles.fileTypeContainer}>
+          <Ionicons
+            name={getFileTypeIcon(note.file_type) as any}
+            size={24}
+            color="#4D8DFF"
+          />
+        </View>
+        <View style={styles.noteInfo}>
+          <Text style={styles.noteTitle} numberOfLines={2}>
+            {note.title}
+          </Text>
+          <Text style={styles.noteSubject}>{note.subject}</Text>
+        </View>
+        <TouchableOpacity
+          style={styles.downloadButton}
+          onPress={() => handleDownload(note)}
+        >
+          <Ionicons name="download-outline" size={20} color="#4D8DFF" />
+        </TouchableOpacity>
+      </View>
+
+      {note.description && (
+        <Text style={styles.noteDescription} numberOfLines={2}>
+          {note.description}
+        </Text>
+      )}
+
+      <View style={styles.noteMeta}>
+        <View style={styles.authorInfo}>
+          <ProfileIcon gender={note.user?.gender || "other"} size={24} />
+          <Text style={styles.authorName}>
+            {note.user?.full_name || "Anonymous"}
+          </Text>
+        </View>
+        <View style={styles.stats}>
+          <View style={styles.stat}>
+            <Ionicons name="heart" size={14} color="#FF6B6B" />
+            <Text style={styles.statText}>{note.likes}</Text>
+          </View>
+          <View style={styles.stat}>
+            <Ionicons name="download" size={14} color="#4D8DFF" />
+            <Text style={styles.statText}>{note.downloads}</Text>
+          </View>
+        </View>
+      </View>
+
+      {note.tags && note.tags.length > 0 && (
+        <View style={styles.tagsContainer}>
+          {note.tags.slice(0, 3).map((tag, index) => (
+            <View key={index} style={styles.tag}>
+              <Text style={styles.tagText}>{tag}</Text>
+            </View>
+          ))}
+          {note.tags.length > 3 && (
+            <Text style={styles.moreTags}>+{note.tags.length - 3}</Text>
+          )}
+        </View>
+      )}
+    </TouchableOpacity>
+  );
+
+  const filteredNotes = getFilteredNotes();
 
   return (
     <View style={styles.container}>
       {/* Top bar */}
       <View style={styles.topBar}>
-        <Text style={styles.screenTitle}>Explore</Text>
+        <Text style={styles.screenTitle}>Explore Notes</Text>
         <View style={styles.tabSwitch}>
           <TouchableOpacity
             style={[styles.tabBtn, activeTab === "List" && styles.tabBtnActive]}
@@ -122,16 +299,16 @@ export default function ExploreScreen() {
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.tabBtn, activeTab === "Map" && styles.tabBtnActive]}
-            onPress={() => setActiveTab("Map")}
+            style={[styles.tabBtn, activeTab === "Grid" && styles.tabBtnActive]}
+            onPress={() => setActiveTab("Grid")}
           >
             <Text
               style={[
                 styles.tabText,
-                activeTab === "Map" && styles.tabTextActive,
+                activeTab === "Grid" && styles.tabTextActive,
               ]}
             >
-              Map
+              Grid
             </Text>
           </TouchableOpacity>
         </View>
@@ -140,24 +317,28 @@ export default function ExploreScreen() {
       {/* Search Bar */}
       <View style={styles.searchBarWrapper}>
         <Ionicons
-          name="location-outline"
+          name="search"
           size={20}
           color="#B0B0B0"
           style={{ marginLeft: 10 }}
         />
         <TextInput
           style={styles.searchBar}
-          placeholder="Search by location, PG, or area"
+          placeholder="Search notes by title, subject, or tags..."
           placeholderTextColor="#B0B0B0"
           value={search}
           onChangeText={setSearch}
         />
-        <Ionicons
-          name="search"
-          size={20}
-          color="#4D8DFF"
-          style={{ marginRight: 10 }}
-        />
+        {(searching || (search.trim() && !searching)) && (
+          <TouchableOpacity onPress={() => setSearch("")}>
+            <Ionicons
+              name="close-circle"
+              size={20}
+              color="#4D8DFF"
+              style={{ marginRight: 10 }}
+            />
+          </TouchableOpacity>
+        )}
       </View>
 
       {/* Filter Chips */}
@@ -194,66 +375,34 @@ export default function ExploreScreen() {
         />
       </View>
 
-      {/* Room Cards or Map */}
-      {activeTab === "List" ? (
-        <ScrollView showsVerticalScrollIndicator={false} style={{ flex: 1 }}>
-          {ROOMS.map((room) => (
-            <View key={room.id} style={styles.roomCard}>
-              <Image source={room.image} style={styles.roomImage} />
-              <View style={styles.roomInfo}>
-                <Text style={styles.roomTitle}>{room.title}</Text>
-                <Text style={styles.roomRent}>{room.rent}</Text>
-                <View style={styles.roomMetaRow}>
-                  <View style={styles.metaItem}>
-                    <FontAwesome5 name="users" size={15} color="#4D8DFF" />
-                    <Text style={styles.metaText}>{room.sharing}</Text>
-                  </View>
-                  <View style={styles.metaItem}>
-                    {GENDER_ICONS[room.gender]}
-                    <Text style={styles.metaText}>{room.gender}</Text>
-                  </View>
-                  {room.amenities.map((am, idx) => (
-                    <View key={idx} style={styles.metaItem}>
-                      {am === "Wi-Fi" && (
-                        <Feather name="wifi" size={15} color="#4D8DFF" />
-                      )}
-                      {am === "AC" && (
-                        <MaterialIcons
-                          name="ac-unit"
-                          size={15}
-                          color="#4D8DFF"
-                        />
-                      )}
-                      {am === "Washing Machine" && (
-                        <MaterialIcons
-                          name="local-laundry-service"
-                          size={15}
-                          color="#4D8DFF"
-                        />
-                      )}
-                    </View>
-                  ))}
-                </View>
-                <TouchableOpacity style={styles.contactBtn}>
-                  <Ionicons name="call" size={18} color="#fff" />
-                  <Text style={styles.contactBtnText}>Contact</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          ))}
-          <View style={{ height: 80 }} />
-        </ScrollView>
+      {/* Notes List */}
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#4D8DFF" />
+          <Text style={styles.loadingText}>Loading notes...</Text>
+        </View>
+      ) : filteredNotes.length > 0 ? (
+        <FlatList
+          data={filteredNotes}
+          keyExtractor={(item) => item.id}
+          renderItem={renderNoteCard}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ padding: 16, gap: 16 }}
+          numColumns={activeTab === "Grid" ? 2 : 1}
+          key={activeTab}
+        />
       ) : (
-        <View style={styles.mapViewPlaceholder}>
-          <Ionicons name="map-outline" size={64} color="#B0B0B0" />
-          <Text
-            style={{
-              color: "#B0B0B0",
-              fontSize: 16,
-              marginTop: 8,
-            }}
-          >
-            Map View Coming Soon
+        <View style={styles.emptyContainer}>
+          <Ionicons name="document-text-outline" size={48} color="#B0B0B0" />
+          <Text style={styles.emptyText}>
+            {search.trim()
+              ? "No notes found for your search"
+              : "No notes available"}
+          </Text>
+          <Text style={styles.emptySubtext}>
+            {search.trim()
+              ? "Try different keywords"
+              : "Be the first to upload notes!"}
           </Text>
         </View>
       )}
@@ -300,47 +449,46 @@ export default function ExploreScreen() {
 }
 
 const styles = StyleSheet.create({
-  // (same styles as your code, no changes needed)
   container: {
     flex: 1,
-    backgroundColor: "#fff",
-    paddingTop: 48,
+    backgroundColor: "#F7FAFF",
   },
   topBar: {
     flexDirection: "row",
-    alignItems: "center",
     justifyContent: "space-between",
+    alignItems: "center",
     paddingHorizontal: 20,
-    marginBottom: 8,
+    paddingTop: 60,
+    paddingBottom: 20,
   },
   screenTitle: {
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: "700",
     color: "#222",
   },
   tabSwitch: {
     flexDirection: "row",
-    backgroundColor: "#F2F6FA",
-    borderRadius: 16,
-    overflow: "hidden",
+    backgroundColor: "#F0F0F0",
+    borderRadius: 12,
+    padding: 4,
   },
   tabBtn: {
-    paddingVertical: 2,
-    paddingHorizontal: 18,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
   },
   tabBtnActive: {
-    backgroundColor: "#fff",
-    borderRadius: 16,
+    backgroundColor: "#FFFFFF",
     shadowColor: "#000",
-    shadowOpacity: 0.06,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
     elevation: 2,
   },
   tabText: {
-    fontSize: 15,
-    color: "#B0B0B0",
+    fontSize: 14,
     fontWeight: "600",
+    color: "#666",
   },
   tabTextActive: {
     color: "#4D8DFF",
@@ -348,112 +496,171 @@ const styles = StyleSheet.create({
   searchBarWrapper: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#F7FAFF",
-    borderRadius: 16,
+    backgroundColor: "#FFFFFF",
     marginHorizontal: 20,
-    marginTop: 8,
+    borderRadius: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   searchBar: {
     flex: 1,
-    height: 44,
-    fontSize: 15,
-    borderRadius: 16,
-    paddingHorizontal: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 10,
+    fontSize: 16,
     color: "#222",
   },
   chip: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#F2F6FA",
-    borderRadius: 16,
-    paddingHorizontal: 14,
-    paddingVertical: 7,
-    height: 50,
+    backgroundColor: "#FFFFFF",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "#E0E0E0",
+    gap: 6,
   },
   chipActive: {
     backgroundColor: "#4D8DFF",
+    borderColor: "#4D8DFF",
   },
   chipText: {
-    fontSize: 14,
-    color: "#4D8DFF",
-    marginLeft: 6,
+    fontSize: 12,
     fontWeight: "600",
+    color: "#666",
   },
   chipTextActive: {
-    color: "#fff",
+    color: "#FFFFFF",
   },
-  roomCard: {
-    backgroundColor: "#fff",
-    borderRadius: 18,
-    marginTop: 20,
-    marginHorizontal: 18,
-    marginBottom: 22,
-    shadowColor: "#000",
-    shadowOpacity: 0.07,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 3,
-    overflow: "hidden",
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
   },
-  roomImage: {
-    width: "100%",
-    height: width * 0.42,
-    resizeMode: "cover",
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: "#666",
   },
-  roomInfo: {
+  emptyContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 40,
+  },
+  emptyText: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#444",
+    marginTop: 16,
+    textAlign: "center",
+  },
+  emptySubtext: {
+    fontSize: 14,
+    color: "#666",
+    marginTop: 8,
+    textAlign: "center",
+  },
+  noteCard: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 16,
     padding: 16,
+    marginBottom: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+    flex: 1,
+    marginHorizontal: 4,
   },
-  roomTitle: {
-    fontSize: 17,
-    fontWeight: "700",
+  noteHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  fileTypeContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 8,
+    backgroundColor: "#F0F8FF",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 12,
+  },
+  noteInfo: {
+    flex: 1,
+  },
+  noteTitle: {
+    fontSize: 16,
+    fontWeight: "600",
     color: "#222",
     marginBottom: 2,
   },
-  roomRent: {
-    fontSize: 15,
-    color: "#4D8DFF",
-    fontWeight: "600",
-    marginBottom: 8,
-  },
-  roomMetaRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 10,
-    gap: 12,
-    flexWrap: "wrap",
-  },
-  metaItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginRight: 10,
-    gap: 3,
-  },
-  metaText: {
-    fontSize: 13,
-    color: "#555",
-    marginLeft: 3,
-  },
-  contactBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#4D8DFF",
-    borderRadius: 12,
-    paddingVertical: 8,
-    paddingHorizontal: 18,
-    alignSelf: "flex-start",
-    marginTop: 4,
-  },
-  contactBtnText: {
+  noteSubject: {
     fontSize: 14,
-    color: "#fff",
-    fontWeight: "600",
-    marginLeft: 7,
+    color: "#666",
   },
-  mapViewPlaceholder: {
-    flex: 1,
+  downloadButton: {
+    padding: 8,
+  },
+  noteDescription: {
+    fontSize: 14,
+    color: "#666",
+    marginBottom: 12,
+    lineHeight: 20,
+  },
+  noteMeta: {
+    flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
-    justifyContent: "center",
-    marginTop: 40,
+    marginBottom: 12,
+  },
+  authorInfo: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  authorName: {
+    fontSize: 12,
+    color: "#666",
+    marginLeft: 8,
+  },
+  stats: {
+    flexDirection: "row",
+    gap: 12,
+  },
+  stat: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  statText: {
+    fontSize: 12,
+    color: "#666",
+  },
+  tagsContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 6,
+  },
+  tag: {
+    backgroundColor: "#F0F0F0",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  tagText: {
+    fontSize: 10,
+    color: "#222",
+    fontWeight: "500",
+  },
+  moreTags: {
+    fontSize: 10,
+    color: "#666",
+    alignSelf: "center",
   },
   bottomNav: {
     flexDirection: "row",
@@ -470,28 +677,22 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   navItem: {
-  flex: 1,
-  alignItems: "center",
-  justifyContent: "center",
-  height: 64, // ensure same height
-},
- navItemActive: {
-  alignItems: "center",
-  justifyContent: "center",
-  flex: 1,
-  height: 64,
-  borderTopWidth: 2,
-  borderTopColor: "#4D8DFF",
-  backgroundColor: "#F7FAFF",
-  borderTopLeftRadius: 18,
-  borderTopRightRadius: 18, // 👈 Add these two
-  shadowColor: "#000",
-// shadowOpacity: 0.04,
-// shadowRadius: 4,
-// shadowOffset: { width: 0, height: -1 },
-// elevation: 3,
-},
-
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    height: 64,
+  },
+  navItemActive: {
+    alignItems: "center",
+    justifyContent: "center",
+    flex: 1,
+    height: 64,
+    borderTopWidth: 2,
+    borderTopColor: "#4D8DFF",
+    backgroundColor: "#F7FAFF",
+    borderTopLeftRadius: 18,
+    borderTopRightRadius: 18,
+  },
   navLabel: { fontSize: 12, color: "#B0B0B0", marginTop: 2 },
   navLabelActive: {
     fontSize: 12,
