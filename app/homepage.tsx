@@ -22,8 +22,8 @@ import { supabase } from "../utils/supabase";
 
 const featureCards = [
   {
-    title: "Share Notes",
-    label: "Form",
+    title: "Download Notes",
+    label: "form",
     icon: <MaterialIcons name="upload-file" size={26} color="#FF6B6B" />,
     bg: "#FFF0F0",
     route: "/sharenotes",
@@ -330,15 +330,29 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: -2 },
     elevation: 8,
   },
-  navItem: { alignItems: "center", justifyContent: "center", flex: 1 },
-  navItemActive: {
-    alignItems: "center",
-    justifyContent: "center",
-    flex: 1,
-    borderTopWidth: 2,
-    borderTopColor: "#4D8DFF",
-    backgroundColor: "#F7FAFF",
-  },
+  navItem: {
+  flex: 1,
+  alignItems: "center",
+  justifyContent: "center",
+  height: 64, // ensure same height
+},
+ navItemActive: {
+  alignItems: "center",
+  justifyContent: "center",
+  flex: 1,
+  height: 64,
+  borderTopWidth: 2,
+  borderTopColor: "#4D8DFF",
+  backgroundColor: "#F7FAFF",
+  borderTopLeftRadius: 18,
+  borderTopRightRadius: 18, // 👈 Add these two
+  shadowColor: "#000",
+// shadowOpacity: 0.04,
+// shadowRadius: 4,
+// shadowOffset: { width: 0, height: -1 },
+// elevation: 3,
+},
+
   navLabel: { fontSize: 12, color: "#B0B0B0", marginTop: 2 },
   navLabelActive: {
     fontSize: 12,

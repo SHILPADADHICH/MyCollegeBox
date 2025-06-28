@@ -87,35 +87,43 @@ export default function MessagesScreen() {
           </View>
         )}
       />
-      {/* Bottom Navigation */}
-      <View style={styles.bottomNav}>
-        <Link href="/homepage" asChild>
-          <TouchableOpacity style={styles.navItem}>
-            <Ionicons name="home" size={24} color="#B0B0B0" />
-            <Text style={styles.navLabel}>Home</Text>
-          </TouchableOpacity>
-        </Link>
-        <TouchableOpacity style={styles.navItemActive}>
-          <Ionicons name="chatbubble-ellipses-outline" size={24} color="#4D8DFF" />
-          <Text style={styles.navLabelActive}>Messages</Text>
-        </TouchableOpacity>
-        <Link href="/UploadSelectPage" asChild>
-          <TouchableOpacity style={styles.navItem}>
-            <Ionicons name="add-circle-outline" size={28} color="#B0B0B0" />
-            <Text style={styles.navLabel}>Add</Text>
-          </TouchableOpacity>
-        </Link>
-        <TouchableOpacity style={styles.navItem}>
-          <Ionicons name="search" size={24} color="#B0B0B0" />
-          <Text style={styles.navLabel}>Search</Text>
-        </TouchableOpacity>
-        <Link href="/profile" asChild>
-          <TouchableOpacity style={styles.navItem}>
-            <Ionicons name="person-outline" size={24} color="#B0B0B0" />
-            <Text style={styles.navLabel}>Profile</Text>
-          </TouchableOpacity>
-        </Link>
-      </View>
+      {/* Bottom Nav */}
+            <View style={styles.bottomNav}>
+              <Link href="/homepage" asChild>
+                <TouchableOpacity style={styles.navItem}>
+                  <Ionicons name="home" size={22} color="#B0B0B0" />
+                  <Text style={styles.navLabel}>Home</Text>
+                </TouchableOpacity>
+              </Link>
+              <Link href="/explore" asChild>
+                <TouchableOpacity style={styles.navItem}>
+                  <Ionicons name="compass-outline" size={22} color="#B0B0B0" />
+                  <Text style={styles.navLabel}>Explore</Text>
+                </TouchableOpacity>
+              </Link>
+              <Link href="/UploadSelectPage" asChild>
+                <TouchableOpacity style={styles.navItem}>
+                  <Ionicons name="add-circle-outline" size={26} color="#B0B0B0" />
+                  <Text style={styles.navLabel}>Upload</Text>
+                </TouchableOpacity>
+              </Link>
+              <Link href="/messages" asChild>
+                <TouchableOpacity style={styles.navItemActive}>
+                  <Ionicons
+                    name="chatbubble-ellipses-outline"
+                    size={22}
+                    color="#4D8DFF"
+                  />
+                  <Text style={styles.navLabelActive}>Messages</Text>
+                </TouchableOpacity>
+              </Link>
+              <Link href="/profile" asChild>
+                <TouchableOpacity style={styles.navItem}>
+                  <Ionicons name="person-outline" size={22} color="#B0B0B0" />
+                  <Text style={styles.navLabel}>Profile</Text>
+                </TouchableOpacity>
+              </Link>
+            </View>
     </SafeAreaView>
   );
 }
@@ -195,47 +203,47 @@ const styles = StyleSheet.create({
     fontFamily: 'Poppins_400Regular',
   },
   bottomNav: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-around",
+    alignItems: "center",
     height: 64,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderTopLeftRadius: 18,
     borderTopRightRadius: 18,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOpacity: 0.06,
     shadowRadius: 8,
     shadowOffset: { width: 0, height: -2 },
     elevation: 8,
   },
   navItem: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    flex: 1,
-  },
-  navItemActive: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    flex: 1,
-    borderTopWidth: 2,
-    borderTopColor: '#4D8DFF',
-    backgroundColor: '#F7FAFF',
-  },
-  navLabel: {
-    fontSize: 12,
-    color: '#B0B0B0',
-    marginTop: 2,
-    fontFamily: 'Poppins_400Regular',
-  },
+  flex: 1,
+  alignItems: "center",
+  justifyContent: "center",
+  height: 64, // ensure same height
+},
+ navItemActive: {
+  alignItems: "center",
+  justifyContent: "center",
+  flex: 1,
+  height: 64,
+  borderTopWidth: 2,
+  borderTopColor: "#4D8DFF",
+  backgroundColor: "#F7FAFF",
+  borderTopLeftRadius: 18,
+  borderTopRightRadius: 18, // 👈 Add these two
+  shadowColor: "#000",
+// shadowOpacity: 0.04,
+// shadowRadius: 4,
+// shadowOffset: { width: 0, height: -1 },
+// elevation: 3,
+},
+
+  navLabel: { fontSize: 12, color: "#B0B0B0", marginTop: 2 },
   navLabelActive: {
     fontSize: 12,
-    color: '#4D8DFF',
+    color: "#4D8DFF",
     marginTop: 2,
-    fontWeight: '700',
-    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: "700",
   },
 }); 

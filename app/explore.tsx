@@ -262,19 +262,19 @@ export default function ExploreScreen() {
       <View style={styles.bottomNav}>
         <Link href="/homepage" asChild>
           <TouchableOpacity style={styles.navItem}>
-            <Ionicons name="home" size={24} color="#B0B0B0" />
+            <Ionicons name="home" size={22} color="#B0B0B0" />
             <Text style={styles.navLabel}>Home</Text>
           </TouchableOpacity>
         </Link>
         <Link href="/explore" asChild>
           <TouchableOpacity style={styles.navItemActive}>
-            <Ionicons name="compass-outline" size={24} color="#4D8DFF" />
+            <Ionicons name="compass-outline" size={22} color="#4D8DFF" />
             <Text style={styles.navLabelActive}>Explore</Text>
           </TouchableOpacity>
         </Link>
         <Link href="/UploadSelectPage" asChild>
           <TouchableOpacity style={styles.navItem}>
-            <Ionicons name="add-circle-outline" size={28} color="#B0B0B0" />
+            <Ionicons name="add-circle-outline" size={26} color="#B0B0B0" />
             <Text style={styles.navLabel}>Upload</Text>
           </TouchableOpacity>
         </Link>
@@ -282,7 +282,7 @@ export default function ExploreScreen() {
           <TouchableOpacity style={styles.navItem}>
             <Ionicons
               name="chatbubble-ellipses-outline"
-              size={24}
+              size={22}
               color="#B0B0B0"
             />
             <Text style={styles.navLabel}>Messages</Text>
@@ -290,7 +290,7 @@ export default function ExploreScreen() {
         </Link>
         <Link href="/profile" asChild>
           <TouchableOpacity style={styles.navItem}>
-            <Ionicons name="person-outline" size={24} color="#B0B0B0" />
+            <Ionicons name="person-outline" size={22} color="#B0B0B0" />
             <Text style={styles.navLabel}>Profile</Text>
           </TouchableOpacity>
         </Link>
@@ -470,23 +470,29 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   navItem: {
-    alignItems: "center",
-    justifyContent: "center",
-    flex: 1,
-  },
-  navItemActive: {
-    alignItems: "center",
-    justifyContent: "center",
-    flex: 1,
-    borderTopWidth: 2,
-    borderTopColor: "#4D8DFF",
-    backgroundColor: "#F7FAFF",
-  },
-  navLabel: {
-    fontSize: 12,
-    color: "#B0B0B0",
-    marginTop: 2,
-  },
+  flex: 1,
+  alignItems: "center",
+  justifyContent: "center",
+  height: 64, // ensure same height
+},
+ navItemActive: {
+  alignItems: "center",
+  justifyContent: "center",
+  flex: 1,
+  height: 64,
+  borderTopWidth: 2,
+  borderTopColor: "#4D8DFF",
+  backgroundColor: "#F7FAFF",
+  borderTopLeftRadius: 18,
+  borderTopRightRadius: 18, // 👈 Add these two
+  shadowColor: "#000",
+// shadowOpacity: 0.04,
+// shadowRadius: 4,
+// shadowOffset: { width: 0, height: -1 },
+// elevation: 3,
+},
+
+  navLabel: { fontSize: 12, color: "#B0B0B0", marginTop: 2 },
   navLabelActive: {
     fontSize: 12,
     color: "#4D8DFF",

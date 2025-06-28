@@ -22,7 +22,7 @@ const notesData = [
     id: "1",
     title: "Operating System Notes",
     subtitle: "Complete Unit 1-5 Summary",
-    user: "Ankush kumar",
+    user: "Ankush Kumar",
     semester: "4",
     courseCode: "OS204",
     branch: "CSE",
@@ -79,7 +79,8 @@ export default function NotesPage() {
     return (
       (branch === "All" || note.branch === branch) &&
       (semester === "All" || note.semester === semester) &&
-      (course === "All" || note.courseCode.toLowerCase().includes(course.toLowerCase()))
+      (course === "All" ||
+        note.courseCode.toLowerCase().includes(course.toLowerCase()))
     );
   });
 
@@ -92,36 +93,40 @@ export default function NotesPage() {
       </View>
 
       {/* Filters */}
-      {Object.keys(filters).map((filterKey) => (
-        <ScrollView
-          key={filterKey}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.categoryScroll}
-        >
-          {filters[filterKey].map((item) => (
-            <TouchableOpacity
-              key={item}
-              style={[
-                styles.categoryPill,
-                selectedFilters[filterKey] === item &&
-                  styles.categoryPillActive,
-              ]}
-              onPress={() => handleFilter(filterKey, item)}
+      <View style={styles.filtersWrapper}>
+        {Object.entries(filters).map(([type, options]) => (
+          <View key={type} style={styles.filterGroup}>
+            <Text style={styles.filterLabel}>{type.toUpperCase()}</Text>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.categoryScroll}
             >
-              <Text
-                style={[
-                  styles.categoryText,
-                  selectedFilters[filterKey] === item &&
-                    styles.categoryTextActive,
-                ]}
-              >
-                {item}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-      ))}
+              {options.map((option) => (
+                <TouchableOpacity
+                  key={option}
+                  style={[
+                    styles.categoryPill,
+                    selectedFilters[type] === option &&
+                      styles.categoryPillActive,
+                  ]}
+                  onPress={() => handleFilter(type, option)}
+                >
+                  <Text
+                    style={[
+                      styles.categoryText,
+                      selectedFilters[type] === option &&
+                        styles.categoryTextActive,
+                    ]}
+                  >
+                    {option}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        ))}
+      </View>
 
       {/* Notes List */}
       <FlatList
@@ -138,8 +143,8 @@ export default function NotesPage() {
                 {item.semester} Sem | {item.courseCode} | {item.branch}
               </Text>
               <Text style={styles.noteUser}>Shared by {item.user}</Text>
-              <Text style={styles.noteDownloads}>
-                <Ionicons name="download-outline" size={14} color="#888" />{" "}
+              <Text style={styles.noteDownloads} >
+                <Ionicons name="download-outline" size={14} color="green" />{" "}
                 Your notes helped {item.downloads} students
               </Text>
             </View>
@@ -169,9 +174,22 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: "#222",
   },
+  filtersWrapper: {
+    marginBottom: 12,
+  },
+  filterGroup: {
+    marginBottom: 8,
+  },
+  filterLabel: {
+    marginLeft: 20,
+    marginBottom: 4,
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#444",
+    textTransform: "capitalize",
+  },
   categoryScroll: {
     paddingHorizontal: 17,
-    marginVertical: 5,
   },
   categoryPill: {
     backgroundColor: "#F0F4FA",
@@ -230,7 +248,7 @@ const styles = StyleSheet.create({
   },
   noteDownloads: {
     fontSize: 12,
-    color: "#888",
+    color: "green",
     marginTop: 6,
   },
 });
