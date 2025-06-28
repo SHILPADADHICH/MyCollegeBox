@@ -30,6 +30,8 @@ export default function SignUp() {
   const [password, setPassword] = useState("");
   const [accountType, setAccountType] = useState("User");
   const [gender, setGender] = useState("Male");
+  const [branch, setBranch] = useState("");
+  const [year, setYear] = useState("");
   const [phone, setPhone] = useState("");
   const [city, setCity] = useState("");
   const [pgName, setPgName] = useState("");
@@ -61,8 +63,16 @@ export default function SignUp() {
   };
 
   const validateStep2 = () => {
-    if (!accountType || !gender) {
+    if (!accountType || !gender || !branch || !year) {
       Alert.alert("Error", "Please complete all required details");
+      return false;
+    }
+    if (branch.trim().length < 2) {
+      Alert.alert("Error", "Please enter a valid branch/department");
+      return false;
+    }
+    if (year.trim().length < 2) {
+      Alert.alert("Error", "Please enter a valid year of study");
       return false;
     }
     return true;
@@ -106,37 +116,61 @@ export default function SignUp() {
         password,
         options: {
           data: { fullName },
-          
         },
       });
-      if (error) throw error;
+
+      if (error) {
+        console.error("Auth signup error:", error);
+        throw error;
+      }
 
       if (data.user) {
-        await supabase.from("profiles").upsert([
-          {
-            id: data.user.id,
-            full_name: fullName,
-            account_type: accountType,
-            gender,
-            phone,
-            city,
-            pg_name: accountType === "PG Owner" ? pgName : null,
-            pg_location: accountType === "PG Owner" ? pgLocation : null,
-            pg_contact: accountType === "PG Owner" ? pgContact : null,
-            room_types: accountType === "PG Owner" ? roomTypes : null,
-          },
-        ]);
+        // Convert gender to lowercase to match database constraint
+        const genderLower = gender.toLowerCase();
+
+        const { data: profileData, error: profileError } = await supabase
+          .from("profiles")
+          .insert([
+            {
+              id: data.user.id,
+              name: fullName,
+              full_name: fullName,
+              account_type: accountType,
+              gender: genderLower,
+              branch,
+              year,
+              phone,
+              city,
+              pg_name: accountType === "PG Owner" ? pgName : null,
+              pg_location: accountType === "PG Owner" ? pgLocation : null,
+              pg_contact: accountType === "PG Owner" ? pgContact : null,
+              room_types: accountType === "PG Owner" ? roomTypes : null,
+            },
+          ])
+          .select();
+
+        if (profileError) {
+          console.error("Profile creation error:", profileError);
+          throw new Error("Failed to create profile: " + profileError.message);
+        }
       }
 
       setIsLoading(false);
-      Alert.alert(
-        "Success!",
-        "Account created successfully!",
-        [{ text: "OK", onPress: () => router.push("./signin") }]
-      );
+      Alert.alert("Success!", "Account created successfully!", [
+        { text: "OK", onPress: () => router.push("./signin") },
+      ]);
     } catch (err: any) {
       setIsLoading(false);
-      Alert.alert("Sign Up Error", err.message || "Something went wrong.");
+      console.error("Signup error:", err);
+
+      let errorMessage = "Something went wrong.";
+      if (err.message) {
+        errorMessage = err.message;
+      } else if (err.error_description) {
+        errorMessage = err.error_description;
+      }
+
+      Alert.alert("Sign Up Error", errorMessage);
     }
   };
 
@@ -232,6 +266,38 @@ export default function SignUp() {
                   </Text>
                 </Pressable>
               ))}
+            </View>
+            <View style={styles.inputContainer}>
+              <Ionicons
+                name="school-outline"
+                size={20}
+                color="#4D8DFF"
+                style={styles.icon}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="🎓 Branch/Department"
+                placeholderTextColor="#B0B0B0"
+                value={branch}
+                onChangeText={setBranch}
+                autoCapitalize="words"
+              />
+            </View>
+            <View style={styles.inputContainer}>
+              <Ionicons
+                name="calendar-outline"
+                size={20}
+                color="#4D8DFF"
+                style={styles.icon}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="📅 Year of Study"
+                placeholderTextColor="#B0B0B0"
+                value={year}
+                onChangeText={setYear}
+                autoCapitalize="words"
+              />
             </View>
             <View style={styles.inputContainer}>
               <Ionicons
