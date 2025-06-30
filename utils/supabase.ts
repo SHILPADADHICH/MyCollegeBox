@@ -1,18 +1,13 @@
-import "react-native-url-polyfill/auto";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { createClient, processLock } from "@supabase/supabase-js";
+import 'react-native-url-polyfill/auto'
+import AsyncStorage from '@react-native-async-storage/async-storage'
+import { createClient, processLock } from '@supabase/supabase-js'
+import { SUPABASE_URL, SUPABASE_KEY } from './config'
 
-// Debug environment variables
-console.log("Supabase environment check:", {
-  hasUrl: !!process.env.EXPO_PUBLIC_SUPABASE_URL,
-  hasKey: !!process.env.EXPO_PUBLIC_SUPABASE_KEY,
-  urlLength: process.env.EXPO_PUBLIC_SUPABASE_URL?.length || 0,
-  keyLength: process.env.EXPO_PUBLIC_SUPABASE_KEY?.length || 0,
-});
-
+// Create the Supabase client with the configured URLs
+// If the credentials are missing, this will use the placeholders from config.ts
 export const supabase = createClient(
-  process.env.EXPO_PUBLIC_SUPABASE_URL!,
-  process.env.EXPO_PUBLIC_SUPABASE_KEY!,
+  SUPABASE_URL,
+  SUPABASE_KEY,
   {
     auth: {
       storage: AsyncStorage,
@@ -21,7 +16,7 @@ export const supabase = createClient(
       detectSessionInUrl: false,
       lock: processLock,
     },
-  }
-);
+  })
 
-console.log("Supabase client created successfully");
+console.log('Supabase client initialized with URL:', SUPABASE_URL.substring(0, 20) + '...');
+        

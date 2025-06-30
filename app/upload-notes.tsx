@@ -19,6 +19,7 @@ import { useRouter } from "expo-router";
 import * as DocumentPicker from "expo-document-picker";
 import * as ImagePicker from "expo-image-picker";
 import { notesService } from "../utils/notesService";
+import NetInfo from "@react-native-community/netinfo";
 
 export default function UploadNotesPage() {
   const router = useRouter();
@@ -33,44 +34,65 @@ export default function UploadNotesPage() {
     tags: "",
   });
 
-  const pickPDF = async () => {
+  const pickDocument = async () => {
     try {
+      setLoading(true);
       const result = await DocumentPicker.getDocumentAsync({
         type: "application/pdf",
         copyToCacheDirectory: true,
       });
 
-      if (!result.canceled) {
-        const file = result.assets[0];
-        console.log("PDF file picked:", file);
-        // Patch: Force correct MIME type if detected as text/plain but extension is .pdf
-        let fileType = file.mimeType || "application/pdf";
-        if (
-          (fileType === "text/plain" ||
-            fileType === "text/plain;charset=UTF-8") &&
-          file.name?.toLowerCase().endsWith(".pdf")
-        ) {
-          fileType = "application/pdf";
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        const document = result.assets[0];
+        console.log("Document picked:", document);
+
+        try {
+          // Validate the document
+          if (!document.uri) {
+            throw new Error("Invalid document: Missing URI");
+          }
+
+          if (document.size === 0) {
+            throw new Error("The selected PDF appears to be empty (0 bytes)");
+          }
+
+          // Check if the file is a PDF
+          const fileName = document.name || `document_${Date.now()}.pdf`;
+          if (!fileName.toLowerCase().endsWith(".pdf")) {
+            throw new Error("The selected file is not a PDF");
+          }
+
+          // Set the document as the selected file
+          // Note: In React Native, we pass the uri directly to the upload service
+          // which will handle the blob conversion internally
+          setSelectedFile({
+            uri: document.uri,
+            name: fileName,
+            type: "application/pdf",
+            size: document.size,
+          });
+
+          console.log("Document ready for upload:", {
+            uri: document.uri,
+            name: fileName,
+            type: "application/pdf",
+          });
+        } catch (error: any) {
+          console.error("Error processing document:", error);
+          Alert.alert("Error", `Failed to process document: ${error.message}`);
         }
-        const fileName = file.name || `document_${Date.now()}.pdf`;
-        const fileObj = {
-          ...file,
-          type: fileType,
-          name: fileName,
-          size: file.size,
-          uri: file.uri,
-        };
-        console.log("Processed PDF file object:", fileObj);
-        setSelectedFile(fileObj);
       }
-    } catch (error) {
-      console.error("Error picking PDF:", error);
-      Alert.alert("Error", "Failed to pick PDF file");
+    } catch (error: any) {
+      console.error("Error picking document:", error);
+      Alert.alert("Error", "Failed to pick document");
+    } finally {
+      setLoading(false);
     }
   };
 
   const pickImage = async () => {
     try {
+      setLoading(true);
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
@@ -78,39 +100,58 @@ export default function UploadNotesPage() {
         quality: 0.8,
       });
 
-      if (!result.canceled) {
+      if (!result.canceled && result.assets && result.assets.length > 0) {
         const asset = result.assets[0];
         console.log("Image asset picked:", asset);
-        // Convert to blob for upload
-        const response = await fetch(asset.uri);
-        const blob = await response.blob();
-        // Patch: Force correct MIME type if detected as text/plain but extension is image
-        const fileExtension =
-          asset.uri.split(".").pop()?.toLowerCase() || "jpg";
-        let mimeType = asset.mimeType || blob.type || "";
-        if (
-          (mimeType === "text/plain" ||
-            mimeType === "text/plain;charset=UTF-8") &&
-          ["jpg", "jpeg", "png", "gif", "webp", "bmp", "tiff"].includes(
-            fileExtension
-          )
-        ) {
-          mimeType = `image/${
-            fileExtension === "jpg" ? "jpeg" : fileExtension
-          }`;
+
+        try {
+          // Validate the image
+          if (!asset.uri) {
+            throw new Error("Invalid image: Missing URI");
+          }
+
+          if (asset.width === 0 || asset.height === 0) {
+            throw new Error("The selected image appears to be invalid");
+          }
+
+          // Create a file name based on image format or default to jpg
+          const uriParts = asset.uri.split(".");
+          const fileExtension = uriParts[uriParts.length - 1] || "jpg";
+          const fileName = `image_${Date.now()}.${fileExtension}`;
+
+          // Set proper MIME type based on extension
+          let mimeType = asset.mimeType || "image/jpeg";
+          if (fileExtension === "png") mimeType = "image/png";
+          if (fileExtension === "gif") mimeType = "image/gif";
+          if (fileExtension === "webp") mimeType = "image/webp";
+
+          // Set the image as the selected file
+          // Note: In React Native, we pass the uri directly to the upload service
+          // which will handle the blob conversion internally
+          setSelectedFile({
+            uri: asset.uri,
+            name: fileName,
+            type: mimeType,
+            width: asset.width,
+            height: asset.height,
+            size: asset.fileSize || 0,
+          });
+
+          console.log("Image ready for upload:", {
+            uri: asset.uri,
+            name: fileName,
+            type: mimeType,
+          });
+        } catch (error: any) {
+          console.error("Error processing image:", error);
+          Alert.alert("Error", `Failed to process image: ${error.message}`);
         }
-        const fileName = `image_${Date.now()}.${fileExtension}`;
-        console.log("Image processing:", { fileExtension, mimeType, fileName });
-        // Create a file-like object with proper type
-        const file = new File([blob], fileName, {
-          type: mimeType,
-        });
-        console.log("Processed image file object:", file);
-        setSelectedFile(file);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error picking image:", error);
       Alert.alert("Error", "Failed to pick image");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -125,31 +166,43 @@ export default function UploadNotesPage() {
       return;
     }
 
-    // Validate file type with detailed logging
+    // Log the selected file details for debugging
     console.log("Selected file for upload:", selectedFile);
-    console.log("File type:", selectedFile.type);
-    console.log("File mimeType:", selectedFile.mimeType);
-    console.log("File name:", selectedFile.name);
 
-    const fileType = selectedFile.type || selectedFile.mimeType;
-    const fileName = selectedFile.name;
+    // Validate file name and generate one if needed
+    const fileName =
+      selectedFile.name ||
+      `file_${Date.now()}.${
+        selectedFile.type === "application/pdf" ? "pdf" : "jpg"
+      }`;
+    console.log("File name for upload:", fileName);
 
+    // Set file type based on the file object or extension
+    let fileType = selectedFile.type || "";
     if (!fileType) {
-      console.error("No file type detected");
-      Alert.alert(
-        "Error",
-        "Unable to determine file type. Please try selecting the file again."
-      );
-      return;
+      // Fallback to extension-based type detection
+      if (fileName.toLowerCase().endsWith(".pdf")) {
+        fileType = "application/pdf";
+      } else if (
+        [".jpg", ".jpeg", ".png", ".gif", ".webp"].some((ext) =>
+          fileName.toLowerCase().endsWith(ext)
+        )
+      ) {
+        fileType = "image/jpeg";
+      } else {
+        Alert.alert(
+          "Error",
+          "Cannot determine file type. Please select another file."
+        );
+        return;
+      }
     }
 
-    console.log("Detected file type:", fileType);
+    console.log("File type for upload:", fileType);
 
     // Check if file type is supported
     const isPDF = fileType === "application/pdf";
     const isImage = fileType.startsWith("image/");
-
-    console.log("File type validation:", { isPDF, isImage, fileType });
 
     if (!isPDF && !isImage) {
       Alert.alert(
@@ -162,6 +215,14 @@ export default function UploadNotesPage() {
     setLoading(true);
 
     try {
+      // Check network connectivity before attempting upload
+      const netState = await checkNetworkStatus();
+      if (!netState.isConnected) {
+        throw new Error(
+          "No internet connection. Please check your network settings and try again."
+        );
+      }
+
       // Prepare note data
       const noteData = {
         title: formData.title.trim(),
@@ -175,30 +236,98 @@ export default function UploadNotesPage() {
       };
 
       console.log("Uploading note with data:", noteData);
-      console.log("File being uploaded:", selectedFile);
 
-      // Create note with file upload
-      const note = await notesService.createNoteWithFile(
-        noteData,
-        selectedFile,
-        fileName,
-        true // Temporarily skip network check for testing
-      );
+      // FALLBACK MODE: For severe network issues, try direct file-only upload first
+      try {
+        // Create note with file upload
+        const note = await notesService.createNoteWithFile(
+          noteData,
+          selectedFile, // This can now be either a File, Blob, or an object with uri
+          fileName
+        );
 
-      console.log("Upload successful:", note);
+        console.log("Upload successful:", note);
 
-      Alert.alert("Success!", "Note uploaded successfully!", [
-        { text: "View Note", onPress: () => router.push(`/note/${note.id}`) },
-        { text: "Upload Another", onPress: () => resetForm() },
-        { text: "Go Home", onPress: () => router.push("/homepage") },
-      ]);
-    } catch (error) {
-      console.error("Upload error:", error);
+        Alert.alert("Success!", "Note uploaded successfully!", [
+          { text: "View Note", onPress: () => router.push(`/note/${note.id}`) },
+          { text: "Upload Another", onPress: () => resetForm() },
+          { text: "Go Home", onPress: () => router.push("/homepage") },
+        ]);
+      } catch (uploadError: any) {
+        console.error("Main upload failed:", uploadError);
+
+        // Show a more helpful error message in case of network issues
+        if (uploadError.message.includes("Network request failed")) {
+          Alert.alert(
+            "Network Error",
+            "There seems to be a problem with your internet connection. Make sure you're connected to the internet and try again.",
+            [{ text: "Try Again", style: "default" }]
+          );
+        } else {
+          // Handle specific error types with more user-friendly messages
+          let errorMessage = "An unknown error occurred";
+
+          if (uploadError instanceof Error) {
+            const errorText = uploadError.message;
+
+            if (
+              errorText.includes("Network request timed out") ||
+              errorText.includes("Network error") ||
+              errorText.includes("network request failed")
+            ) {
+              errorMessage =
+                "Network connection issue. Please check your internet connection and try again.";
+            } else if (
+              errorText.includes("authentication") ||
+              errorText.includes("not authenticated")
+            ) {
+              errorMessage = "Authentication error. Please sign in again.";
+            } else if (
+              errorText.includes("permission") ||
+              errorText.includes("access denied")
+            ) {
+              errorMessage = "You don't have permission to upload files.";
+            } else if (
+              errorText.includes("storage quota") ||
+              errorText.includes("too large")
+            ) {
+              errorMessage = "File is too large or storage quota exceeded.";
+            } else if (errorText.includes("file type")) {
+              errorMessage =
+                "Invalid file type. Please select a PDF or image file.";
+            } else if (
+              errorText.includes("not found") ||
+              errorText.includes("404")
+            ) {
+              errorMessage =
+                "Resource not found. Please check your connection and try again.";
+            } else if (errorText.includes("fetch")) {
+              errorMessage =
+                "Failed to fetch file from device. Please try selecting a different file.";
+            } else {
+              // Use original error message if it's descriptive enough
+              errorMessage = `Upload failed: ${errorText}`;
+            }
+          }
+
+          Alert.alert("Upload Error", errorMessage, [
+            { text: "Try Again", style: "default" },
+
+            {
+              text: "Cancel",
+              onPress: () => setLoading(false),
+              style: "cancel",
+            },
+          ]);
+        }
+      }
+    } catch (error: any) {
+      console.error("Upload process error:", error);
+
       Alert.alert(
         "Error",
-        `Failed to upload note: ${
-          error instanceof Error ? error.message : "Unknown error"
-        }`
+        "An unexpected error occurred during the upload process. Please try again.",
+        [{ text: "OK", style: "default" }]
       );
     } finally {
       setLoading(false);
@@ -239,14 +368,10 @@ export default function UploadNotesPage() {
 
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => router.back()}
-          style={styles.backButton}
-        >
-          <Ionicons name="arrow-back" size={24} color="#4D8DFF" />
+        <TouchableOpacity onPress={() => router.back()}>
+          <Ionicons name="arrow-back" size={24} color="#333333" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Upload Notes</Text>
-        <View style={{ width: 24 }} />
       </View>
 
       <KeyboardAvoidingView
@@ -261,19 +386,21 @@ export default function UploadNotesPage() {
           keyboardShouldPersistTaps="handled"
           onScrollBeginDrag={Keyboard.dismiss}
         >
-          {/* File Selection */}
+          {/* File Upload Section */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Select File</Text>
+            <Text style={styles.sectionTitle}>Upload File</Text>
             <Text style={styles.sectionSubtitle}>
-              Choose a PDF or image file to upload
+              Upload a PDF or image file for the note
             </Text>
 
             <View style={styles.fileButtons}>
-              <TouchableOpacity style={styles.fileButton} onPress={pickPDF}>
+              <TouchableOpacity
+                style={styles.fileButton}
+                onPress={pickDocument}
+              >
                 <Ionicons name="document-text" size={24} color="#FF6B6B" />
                 <Text style={styles.fileButtonText}>Pick PDF</Text>
               </TouchableOpacity>
-
               <TouchableOpacity style={styles.fileButton} onPress={pickImage}>
                 <Ionicons name="image" size={24} color="#4D8DFF" />
                 <Text style={styles.fileButtonText}>Pick Image</Text>
@@ -567,3 +694,18 @@ const styles = StyleSheet.create({
     height: 100,
   },
 });
+
+// Helper function to check network status
+const checkNetworkStatus = async () => {
+  try {
+    const state = await NetInfo.fetch();
+    return {
+      isConnected: state.isConnected,
+      type: state.type,
+      details: state.details,
+    };
+  } catch (error: any) {
+    console.error("Error checking network status:", error);
+    return { isConnected: false, type: "unknown", details: null };
+  }
+};

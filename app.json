@@ -16,6 +16,9 @@
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
+        "NSCameraUsageDescription": "This app uses the camera to upload photos for notes",
+        "NSPhotoLibraryUsageDescription": "This app accesses your photos to upload for notes",
+        "NSPhotoLibraryAddUsageDescription": "This app saves photos to your library",
         "NSAppTransportSecurity": {
           "NSAllowsArbitraryLoads": true
         }
@@ -28,9 +31,17 @@
       },
       "edgeToEdgeEnabled": true,
       "permissions": [
-        "android.permission.INTERNET",
-        "android.permission.ACCESS_NETWORK_STATE"
-      ]
+        "INTERNET",
+        "ACCESS_NETWORK_STATE",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "CAMERA"
+      ],
+      "package": "com.mycollegebox.app",
+      "networkSecurityConfig": "./network-security-config.xml",
+      "config": {
+        "usesCleartextTraffic": true
+      }
     },
     "web": {
       "bundler": "metro",
@@ -39,7 +50,19 @@
     },
     "plugins": [
       "expo-router",
-      "expo-font"
+      "expo-font",
+      [
+        "expo-document-picker",
+        {
+          "iCloudContainerEnvironment": "Production"
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "This app accesses your photos to upload for notes"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

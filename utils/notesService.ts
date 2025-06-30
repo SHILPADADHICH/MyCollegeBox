@@ -7,68 +7,173 @@ import {
   NoteFilters,
 } from "../types/notes";
 import { storageService, UploadResult } from "./storageService";
+import { profileService } from "./profileService";
 
 export const notesService = {
   // Get all notes with optional filters
   async getNotes(filters?: NoteFilters): Promise<NoteWithUser[]> {
-    let query = supabase
-      .from("notes")
-      .select(
+    try {
+      // First try the proper join approach
+      let query = supabase
+        .from("notes")
+        .select(
+          `
+          *,
+          user:profiles(full_name, branch, year)
         `
-        *,
-        user:profiles(full_name, branch, year)
-      `
-      )
-      .order("created_at", { ascending: false });
+        )
+        .order("created_at", { ascending: false });
 
-    // Apply filters
-    if (filters?.subject) {
-      query = query.eq("subject", filters.subject);
-    }
-    if (filters?.branch) {
-      query = query.eq("branch", filters.branch);
-    }
-    if (filters?.semester) {
-      query = query.eq("semester", filters.semester);
-    }
-    if (filters?.tags && filters.tags.length > 0) {
-      query = query.overlaps("tags", filters.tags);
-    }
-    if (filters?.search) {
-      query = query.or(
-        `title.ilike.%${filters.search}%,description.ilike.%${filters.search}%`
-      );
-    }
+      // Apply filters
+      if (filters?.subject) {
+        query = query.eq("subject", filters.subject);
+      }
+      if (filters?.branch) {
+        query = query.eq("branch", filters.branch);
+      }
+      if (filters?.semester) {
+        query = query.eq("semester", filters.semester);
+      }
+      if (filters?.tags && filters.tags.length > 0) {
+        query = query.overlaps("tags", filters.tags);
+      }
+      if (filters?.search) {
+        query = query.or(
+          `title.ilike.%${filters.search}%,description.ilike.%${filters.search}%`
+        );
+      }
 
-    const { data, error } = await query;
+      const { data, error } = await query;
 
-    if (error) {
-      console.error("Error fetching notes:", error);
+      if (!error) {
+        return data || [];
+      }
+
+      // If foreign key relationship error occurs, use alternative approach
+      console.log("Falling back to alternative query method for getNotes");
+      
+      // Get notes first
+      let notesQuery = supabase
+        .from("notes")
+        .select('*')
+        .order("created_at", { ascending: false });
+        
+      // Apply the same filters
+      if (filters?.subject) {
+        notesQuery = notesQuery.eq("subject", filters.subject);
+      }
+      if (filters?.branch) {
+        notesQuery = notesQuery.eq("branch", filters.branch);
+      }
+      if (filters?.semester) {
+        notesQuery = notesQuery.eq("semester", filters.semester);
+      }
+      if (filters?.tags && filters.tags.length > 0) {
+        notesQuery = notesQuery.overlaps("tags", filters.tags);
+      }
+      if (filters?.search) {
+        notesQuery = notesQuery.or(
+          `title.ilike.%${filters.search}%,description.ilike.%${filters.search}%`
+        );
+      }
+      
+      const { data: notesData, error: notesError } = await notesQuery;
+      
+      if (notesError) {
+        console.error("Error fetching notes with filters:", notesError);
+        throw new Error("Failed to fetch notes");
+      }
+      
+      // Then manually fetch user data for each note
+      const enhancedNotes = await Promise.all((notesData || []).map(async (note) => {
+        try {
+          const { data: userData } = await supabase
+            .from("profiles")
+            .select("full_name, branch, year")
+            .eq("id", note.user_id)
+            .single();
+            
+          return {
+            ...note,
+            user: userData || { full_name: "Anonymous", branch: "", year: "" }
+          };
+        } catch (err) {
+          console.log(`Could not fetch user data for note ${note.id}`, err);
+          return {
+            ...note,
+            user: { full_name: "Anonymous", branch: "", year: "" }
+          };
+        }
+      }));
+      
+      return enhancedNotes;
+    } catch (error) {
+      console.error("Error in getNotes:", error);
       throw new Error("Failed to fetch notes");
     }
-
-    return data || [];
   },
 
   // Get a single note by ID
   async getNoteById(id: string): Promise<NoteWithUser | null> {
-    const { data, error } = await supabase
-      .from("notes")
-      .select(
+    try {
+      // First try the proper join approach
+      const { data, error } = await supabase
+        .from("notes")
+        .select(
+          `
+          *,
+          user:profiles(full_name, branch, year)
         `
-        *,
-        user:profiles(full_name, branch, year)
-      `
-      )
-      .eq("id", id)
-      .single();
+        )
+        .eq("id", id)
+        .single();
 
-    if (error) {
-      console.error("Error fetching note:", error);
+      if (!error) {
+        return data;
+      }
+
+      // If foreign key relationship error, use alternative approach
+      console.log("Falling back to alternative query method for getNoteById");
+      
+      // Get note first
+      const { data: noteData, error: noteError } = await supabase
+        .from("notes")
+        .select('*')
+        .eq("id", id)
+        .single();
+        
+      if (noteError) {
+        console.error("Error fetching note by id:", noteError);
+        return null;
+      }
+      
+      // Then fetch user data if note exists
+      if (noteData) {
+        try {
+          const { data: userData } = await supabase
+            .from("profiles")
+            .select("full_name, branch, year")
+            .eq("id", noteData.user_id)
+            .single();
+            
+          return {
+            ...noteData,
+            user: userData || { full_name: "Anonymous", branch: "", year: "" }
+          };
+        } catch (err) {
+          console.log(`Could not fetch user data for note ${noteData.id}`, err);
+          return {
+            ...noteData,
+            user: { full_name: "Anonymous", branch: "", year: "" }
+          };
+        }
+      }
+      
+      return null;
+    } catch (error) {
+      console.error("Error in getNoteById:", error);
       return null;
     }
-
-    return data;
   },
 
   // Get notes by current user
@@ -94,36 +199,75 @@ export const notesService = {
 
   // Get notes by current user with user profile data
   async getUserNotes(): Promise<NoteWithUser[]> {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) throw new Error("User not authenticated");
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) throw new Error("User not authenticated");
 
-    const { data, error } = await supabase
-      .from("notes")
-      .select(
+      // First try the proper join approach
+      const { data, error } = await supabase
+        .from("notes")
+        .select(
+          `
+          *,
+          user:profiles(full_name, branch, year, gender)
         `
-        *,
-        user:profiles(full_name, branch, year, gender)
-      `
-      )
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false });
+        )
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
 
-    if (error) {
-      console.error("Error fetching user notes:", error);
+      if (!error) {
+        return data || [];
+      }
+
+      // If foreign key relationship error occurs, use alternative approach
+      console.log("Falling back to alternative query method for getUserNotes");
+      
+      // Get notes first
+      const { data: notesData, error: notesError } = await supabase
+        .from("notes")
+        .select('*')
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
+        
+      if (notesError) {
+        console.error("Error fetching user notes:", notesError);
+        throw new Error("Failed to fetch your notes");
+      }
+      
+      // Fetch user profile once
+      const { data: userProfileData } = await supabase
+        .from("profiles")
+        .select("full_name, branch, year, gender")
+        .eq("id", user.id)
+        .single();
+      
+      const userProfile = userProfileData || { 
+        full_name: "Me", 
+        branch: "", 
+        year: "", 
+        gender: "" 
+      };
+      
+      // Attach the user profile to each note
+      const enhancedNotes = (notesData || []).map(note => ({
+        ...note,
+        user: userProfile
+      }));
+      
+      return enhancedNotes;
+    } catch (error) {
+      console.error("Error in getUserNotes:", error);
       throw new Error("Failed to fetch your notes");
     }
-
-    return data || [];
   },
 
   // Create a new note with file upload
   async createNoteWithFile(
     noteData: Omit<NoteCreate, "file_url" | "file_type">,
     file: File | Blob,
-    fileName: string,
-    skipNetworkCheck: boolean = false
+    fileName: string
   ): Promise<Note> {
     const {
       data: { user },
@@ -131,36 +275,62 @@ export const notesService = {
     if (!user) throw new Error("User not authenticated");
 
     try {
+      console.log("Creating note with file, user ID:", user.id);
+      
+      // Ensure the user profile exists first to avoid foreign key constraint errors
+      console.log("Ensuring profile exists before creating note");
+      const profile = await profileService.ensureProfileExists(user.id);
+      
+      if (!profile) {
+        throw new Error("Failed to create or verify user profile");
+      }
+      
       // Upload file to storage
-      const uploadResult: UploadResult = await storageService.uploadNoteFile(
-        file,
-        fileName,
-        user.id,
-        skipNetworkCheck
-      );
-
-      // Create note with file information
-      const { data, error } = await supabase
-        .from("notes")
-        .insert([
-          {
-            ...noteData,
-            user_id: user.id,
-            file_url: uploadResult.url,
-            file_type: uploadResult.fileType,
-          },
-        ])
-        .select()
-        .single();
-
-      if (error) {
-        // If note creation fails, delete the uploaded file
-        await storageService.deleteNoteFile(uploadResult.path);
-        console.error("Error creating note:", error);
-        throw new Error("Failed to create note");
+      let uploadResult: UploadResult;
+      try {
+        uploadResult = await storageService.uploadNoteFile(
+          file,
+          fileName,
+          user.id
+        );
+        console.log("File uploaded successfully:", uploadResult);
+      } catch (uploadError) {
+        console.error("File upload failed:", uploadError);
+        throw new Error(`File upload failed: ${uploadError instanceof Error ? uploadError.message : "Unknown error"}`);
       }
 
-      return data;
+      // Create note with file information
+      try {
+        const noteToInsert = {
+          ...noteData,
+          user_id: user.id,
+          file_url: uploadResult.url,
+          file_type: uploadResult.fileType,
+        };
+        
+        console.log("Inserting note with data:", noteToInsert);
+        
+        const { data, error } = await supabase
+          .from("notes")
+          .insert([noteToInsert])
+          .select()
+          .single();
+
+        if (error) {
+          console.error("Error creating note in database:", error);
+          // If note creation fails, delete the uploaded file
+          await storageService.deleteNoteFile(uploadResult.path);
+          throw new Error(`Database insert failed: ${error.message}`);
+        }
+
+        console.log("Note created successfully:", data);
+        return data;
+      } catch (insertError) {
+        console.error("Note creation error:", insertError);
+        // Clean up uploaded file if note creation fails
+        await storageService.deleteNoteFile(uploadResult.path);
+        throw insertError;
+      }
     } catch (error) {
       console.error("Error in createNoteWithFile:", error);
       throw error;
@@ -174,23 +344,36 @@ export const notesService = {
     } = await supabase.auth.getUser();
     if (!user) throw new Error("User not authenticated");
 
-    const { data, error } = await supabase
-      .from("notes")
-      .insert([
-        {
-          ...noteData,
-          user_id: user.id,
-        },
-      ])
-      .select()
-      .single();
+    try {
+      // Ensure the user profile exists first
+      console.log("Ensuring profile exists before creating note");
+      const profile = await profileService.ensureProfileExists(user.id);
+      
+      if (!profile) {
+        throw new Error("Failed to create or verify user profile");
+      }
+      
+      const { data, error } = await supabase
+        .from("notes")
+        .insert([
+          {
+            ...noteData,
+            user_id: user.id,
+          },
+        ])
+        .select()
+        .single();
 
-    if (error) {
-      console.error("Error creating note:", error);
-      throw new Error("Failed to create note");
+      if (error) {
+        console.error("Error creating note:", error);
+        throw new Error("Failed to create note");
+      }
+
+      return data;
+    } catch (error) {
+      console.error("Error in createNote:", error);
+      throw error;
     }
-
-    return data;
   },
 
   // Update a note
@@ -355,67 +538,196 @@ export const notesService = {
 
   // Get trending notes (most liked/downloaded)
   async getTrendingNotes(limit: number = 10): Promise<NoteWithUser[]> {
-    const { data, error } = await supabase
-      .from("notes")
-      .select(
+    try {
+      // First try the proper join approach with proper foreign key relationship
+      const { data, error } = await supabase
+        .from("notes")
+        .select(
+          `
+          *,
+          user:profiles(full_name, branch, year)
         `
-        *,
-        user:profiles(full_name, branch, year)
-      `
-      )
-      .order("likes", { ascending: false })
-      .order("downloads", { ascending: false })
-      .limit(limit);
+        )
+        .order("likes", { ascending: false })
+        .order("downloads", { ascending: false })
+        .limit(limit);
 
-    if (error) {
-      console.error("Error fetching trending notes:", error);
+      if (!error) {
+        return data || [];
+      }
+
+      // If the foreign key relationship error occurs, use alternative approach
+      console.log("Falling back to alternative query method for trending notes");
+      
+      // Get notes first
+      const { data: notesData, error: notesError } = await supabase
+        .from("notes")
+        .select('*')
+        .order("likes", { ascending: false })
+        .order("downloads", { ascending: false })
+        .limit(limit);
+        
+      if (notesError) {
+        console.error("Error fetching trending notes:", notesError);
+        throw new Error("Failed to fetch trending notes");
+      }
+      
+      // Then manually fetch user data for each note
+      const enhancedNotes = await Promise.all((notesData || []).map(async (note) => {
+        try {
+          const { data: userData } = await supabase
+            .from("profiles")
+            .select("full_name, branch, year")
+            .eq("id", note.user_id)
+            .single();
+            
+          return {
+            ...note,
+            user: userData || { full_name: "Anonymous", branch: "", year: "" }
+          };
+        } catch (err) {
+          console.log(`Could not fetch user data for note ${note.id}`, err);
+          return {
+            ...note,
+            user: { full_name: "Anonymous", branch: "", year: "" }
+          };
+        }
+      }));
+      
+      return enhancedNotes;
+    } catch (error) {
+      console.error("Error in getTrendingNotes:", error);
       throw new Error("Failed to fetch trending notes");
     }
-
-    return data || [];
   },
 
   // Get notes by subject
   async getNotesBySubject(subject: string): Promise<NoteWithUser[]> {
-    const { data, error } = await supabase
-      .from("notes")
-      .select(
+    try {
+      // First try the proper join approach
+      const { data, error } = await supabase
+        .from("notes")
+        .select(
+          `
+          *,
+          user:profiles(full_name, branch, year)
         `
-        *,
-        user:profiles(full_name, branch, year)
-      `
-      )
-      .eq("subject", subject)
-      .order("created_at", { ascending: false });
+        )
+        .eq("subject", subject)
+        .order("created_at", { ascending: false });
 
-    if (error) {
-      console.error("Error fetching notes by subject:", error);
+      if (!error) {
+        return data || [];
+      }
+
+      // If the foreign key relationship error occurs, use alternative approach
+      console.log("Falling back to alternative query method for notes by subject");
+      
+      // Get notes first
+      const { data: notesData, error: notesError } = await supabase
+        .from("notes")
+        .select('*')
+        .eq("subject", subject)
+        .order("created_at", { ascending: false });
+        
+      if (notesError) {
+        console.error("Error fetching notes by subject:", notesError);
+        throw new Error("Failed to fetch notes by subject");
+      }
+      
+      // Then manually fetch user data for each note
+      const enhancedNotes = await Promise.all((notesData || []).map(async (note) => {
+        try {
+          const { data: userData } = await supabase
+            .from("profiles")
+            .select("full_name, branch, year")
+            .eq("id", note.user_id)
+            .single();
+            
+          return {
+            ...note,
+            user: userData || { full_name: "Anonymous", branch: "", year: "" }
+          };
+        } catch (err) {
+          console.log(`Could not fetch user data for note ${note.id}`, err);
+          return {
+            ...note,
+            user: { full_name: "Anonymous", branch: "", year: "" }
+          };
+        }
+      }));
+      
+      return enhancedNotes;
+    } catch (error) {
+      console.error("Error in getNotesBySubject:", error);
       throw new Error("Failed to fetch notes by subject");
     }
-
-    return data || [];
   },
 
   // Search notes
   async searchNotes(searchTerm: string): Promise<NoteWithUser[]> {
-    const { data, error } = await supabase
-      .from("notes")
-      .select(
+    try {
+      // First try the proper join approach
+      const { data, error } = await supabase
+        .from("notes")
+        .select(
+          `
+          *,
+          user:profiles(full_name, branch, year)
         `
-        *,
-        user:profiles(full_name, branch, year)
-      `
-      )
-      .or(
-        `title.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%,subject.ilike.%${searchTerm}%`
-      )
-      .order("created_at", { ascending: false });
+        )
+        .or(
+          `title.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%,subject.ilike.%${searchTerm}%`
+        )
+        .order("created_at", { ascending: false });
 
-    if (error) {
-      console.error("Error searching notes:", error);
+      if (!error) {
+        return data || [];
+      }
+
+      // If the foreign key relationship error occurs, use alternative approach
+      console.log("Falling back to alternative query method for search notes");
+      
+      // Get notes first
+      const { data: notesData, error: notesError } = await supabase
+        .from("notes")
+        .select('*')
+        .or(
+          `title.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%,subject.ilike.%${searchTerm}%`
+        )
+        .order("created_at", { ascending: false });
+        
+      if (notesError) {
+        console.error("Error searching notes:", notesError);
+        throw new Error("Failed to search notes");
+      }
+      
+      // Then manually fetch user data for each note
+      const enhancedNotes = await Promise.all((notesData || []).map(async (note) => {
+        try {
+          const { data: userData } = await supabase
+            .from("profiles")
+            .select("full_name, branch, year")
+            .eq("id", note.user_id)
+            .single();
+            
+          return {
+            ...note,
+            user: userData || { full_name: "Anonymous", branch: "", year: "" }
+          };
+        } catch (err) {
+          console.log(`Could not fetch user data for note ${note.id}`, err);
+          return {
+            ...note,
+            user: { full_name: "Anonymous", branch: "", year: "" }
+          };
+        }
+      }));
+      
+      return enhancedNotes;
+    } catch (error) {
+      console.error("Error in searchNotes:", error);
       throw new Error("Failed to search notes");
     }
-
-    return data || [];
   },
 };
