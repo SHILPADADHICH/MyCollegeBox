@@ -181,7 +181,8 @@ export default function UploadNotesPage() {
       const note = await notesService.createNoteWithFile(
         noteData,
         selectedFile,
-        fileName
+        fileName,
+        true // Temporarily skip network check for testing
       );
 
       console.log("Upload successful:", note);

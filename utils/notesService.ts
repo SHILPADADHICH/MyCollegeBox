@@ -122,7 +122,8 @@ export const notesService = {
   async createNoteWithFile(
     noteData: Omit<NoteCreate, "file_url" | "file_type">,
     file: File | Blob,
-    fileName: string
+    fileName: string,
+    skipNetworkCheck: boolean = false
   ): Promise<Note> {
     const {
       data: { user },
@@ -134,7 +135,8 @@ export const notesService = {
       const uploadResult: UploadResult = await storageService.uploadNoteFile(
         file,
         fileName,
-        user.id
+        user.id,
+        skipNetworkCheck
       );
 
       // Create note with file information
