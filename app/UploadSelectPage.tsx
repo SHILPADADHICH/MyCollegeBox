@@ -12,7 +12,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function UploadSelectPage() {
   const handleUploadNotes = () => {
-    router.push("/UploadNotes");
+    router.push("/upload-notes");
   };
 
   const handleUploadRoomDetails = () => {

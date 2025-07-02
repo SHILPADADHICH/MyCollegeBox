@@ -97,8 +97,8 @@ export default function ExploreScreen() {
   const [search, setSearch] = useState("");
   const [selectedFilters, setSelectedFilters] = useState([]);
 
-  const toggleFilter = (label) => {
-    setSelectedFilters((prev) =>
+  const toggleFilter = (label:any) => {
+    setSelectedFilters((prev:any) =>
       prev.includes(label) ? prev.filter((f) => f !== label) : [...prev, label]
     );
   };
@@ -174,7 +174,7 @@ export default function ExploreScreen() {
             paddingHorizontal: 10,
             marginVertical: 12,
           }}
-          renderItem={({ item }) => (
+          renderItem={({ item  }) => (
             <TouchableOpacity
               style={[
                 styles.chip,
