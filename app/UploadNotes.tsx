@@ -12,6 +12,7 @@ import {
 import { Ionicons, MaterialIcons, Feather } from "@expo/vector-icons";
 import * as DocumentPicker from "expo-document-picker";
 import * as ImagePicker from "expo-image-picker";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
 const pastelBg = "#f7fafc";
 const cardBg = "#fff";
@@ -58,13 +59,14 @@ export default function UploadNotes() {
   };
 
   return (
+        <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
     <View style={{ flex: 1, backgroundColor: pastelBg }}>
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
       >
         {/* App Title */}
-        <Text style={styles.appTitle}>MyCollegeBox</Text>
+        {/* <Text style={styles.appTitle}>MyCollegeBox</Text> */}
         {/* Heading */}
         <Text style={styles.heading}>Upload Notes</Text>
         <Text style={styles.subheading}>Operating Systems Unit 3</Text>
@@ -189,10 +191,12 @@ export default function UploadNotes() {
         </TouchableOpacity>
       </View>
     </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: { flex: 1, backgroundColor: "#F7FAFF" },
   scrollContent: {
     padding: 20,
     paddingBottom: 100,

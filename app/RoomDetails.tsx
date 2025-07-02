@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import { Ionicons, Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
 const pastelBg = "#f7fafc";
 const cardBg = "#fff";
@@ -27,6 +28,8 @@ export default function RoomDetails() {
   const [instructions, setInstructions] = useState("");
   const [images, setImages] = useState<any[]>([]);
 
+  const insets = useSafeAreaInsets();
+
   const handlePickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -42,14 +45,16 @@ export default function RoomDetails() {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: pastelBg }}>
+    <SafeAreaView >
       <ScrollView
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={{
+          ...styles.scrollContent,
+          paddingTop: insets.top ,
+          paddingBottom: insets.bottom + 120, // so content doesn't hide behind nav bar
+        }}
         keyboardShouldPersistTaps="handled"
       >
-        {/* App Title */}
-        <Text style={styles.appTitle}>MyCollegeBox</Text>
-        {/* Heading */}
+        {/* <Text style={styles.appTitle}>MyCollegeBox</Text> */}
         <Text style={styles.heading}>Room Details</Text>
 
         {/* Room Name */}
@@ -161,7 +166,6 @@ export default function RoomDetails() {
               <Text style={styles.uploadBtnText}>Image</Text>
             </TouchableOpacity>
           </View>
-          {/* Thumbnails */}
           <View style={styles.fileThumbsRow}>
             {images.map((img, idx) => (
               <View key={idx} style={styles.fileThumbCard}>
@@ -177,7 +181,7 @@ export default function RoomDetails() {
           </View>
         </View>
 
-        {/* Special Instructions */}
+        {/* Instructions */}
         <View style={styles.cardSection}>
           <Text style={styles.label}>Special Instructions</Text>
           <TextInput
@@ -190,27 +194,27 @@ export default function RoomDetails() {
           />
         </View>
       </ScrollView>
+
       {/* Submit Button */}
-      <View style={styles.submitBar}>
+      <View style={[styles.submitBar, { paddingBottom: insets.bottom + 16 }]}>
         <TouchableOpacity style={styles.submitBtn}>
           <Text style={styles.submitBtnText}>Submit</Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   scrollContent: {
-    padding: 20,
-    paddingBottom: 100,
+    paddingHorizontal: 20,
   },
   appTitle: {
     fontSize: 18,
     fontWeight: "700",
     color: "#222",
     alignSelf: "center",
-    marginBottom: 12,
+    marginBottom: 4,
     fontFamily: "Poppins_700Bold",
   },
   heading: {
@@ -344,8 +348,7 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     backgroundColor: "transparent",
-    padding: 20,
-    paddingBottom: 28,
+    paddingHorizontal: 20,
   },
   submitBtn: {
     backgroundColor: yellow,

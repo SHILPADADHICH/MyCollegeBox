@@ -6,11 +6,11 @@ import {
   FlatList,
   Image,
   TouchableOpacity,
-  SafeAreaView,
   StatusBar,
 } from 'react-native';
 import { Ionicons, MaterialIcons, Feather, FontAwesome5 } from '@expo/vector-icons';
 import { Link } from 'expo-router';
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
 const notifications = [
   {

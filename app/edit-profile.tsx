@@ -5,7 +5,6 @@ import {
   StyleSheet,
   TextInput,
   TouchableOpacity,
-  SafeAreaView,
   StatusBar,
   Alert,
   ScrollView,
@@ -15,9 +14,15 @@ import { useRouter } from "expo-router";
 import { profileService } from "../utils/profileService";
 import { Profile, ProfileUpdate } from "../types/profile";
 import { ProfileIcon } from "../components/ProfileIcon";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 
 export default function EditProfilePage() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
+
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -86,7 +91,7 @@ export default function EditProfilePage() {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.safeArea}>
+      <SafeAreaView style={[styles.safeArea, { paddingTop: insets.top }]}>
         <View style={styles.loadingContainer}>
           <Text>Loading profile...</Text>
         </View>
@@ -95,7 +100,7 @@ export default function EditProfilePage() {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={[styles.safeArea]}>
       <StatusBar barStyle="dark-content" backgroundColor="#F7FAFF" />
 
       {/* Header */}
@@ -123,165 +128,94 @@ export default function EditProfilePage() {
         </TouchableOpacity>
       </View>
 
-      <ScrollView style={styles.container}>
+      <ScrollView
+        contentContainerStyle={{ paddingBottom: insets.bottom + 20 }}
+        style={styles.container}
+        showsVerticalScrollIndicator={false}
+      >
         {/* Profile Icon Preview */}
         <View style={styles.iconPreview}>
           <ProfileIcon gender={formData.gender} size={80} />
           <Text style={styles.iconPreviewText}>Profile Icon Preview</Text>
         </View>
 
-        {/* Form Fields */}
+        {/* Form */}
         <View style={styles.form}>
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Name *</Text>
-            <TextInput
-              style={styles.input}
-              value={formData.name}
-              onChangeText={(text) =>
-                setFormData((prev) => ({ ...prev, name: text }))
-              }
-              placeholder="Enter your name"
-              placeholderTextColor="#999"
-            />
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Full Name</Text>
-            <TextInput
-              style={styles.input}
-              value={formData.full_name}
-              onChangeText={(text) =>
-                setFormData((prev) => ({ ...prev, full_name: text }))
-              }
-              placeholder="Enter your full name"
-              placeholderTextColor="#999"
-            />
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Branch</Text>
-            <TextInput
-              style={styles.input}
-              value={formData.branch}
-              onChangeText={(text) =>
-                setFormData((prev) => ({ ...prev, branch: text }))
-              }
-              placeholder="e.g., Computer Science"
-              placeholderTextColor="#999"
-            />
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Year</Text>
-            <TextInput
-              style={styles.input}
-              value={formData.year}
-              onChangeText={(text) =>
-                setFormData((prev) => ({ ...prev, year: text }))
-              }
-              placeholder="e.g., 3rd Year"
-              placeholderTextColor="#999"
-            />
-          </View>
+          {[ 
+            { label: "Name *", field: "name", placeholder: "Enter your name" },
+            {
+              label: "Full Name",
+              field: "full_name",
+              placeholder: "Enter your full name",
+            },
+            {
+              label: "Branch",
+              field: "branch",
+              placeholder: "e.g., Computer Science",
+            },
+            {
+              label: "Year",
+              field: "year",
+              placeholder: "e.g., 3rd Year",
+            },
+            {
+              label: "Phone",
+              field: "phone",
+              placeholder: "Enter your phone number",
+            },
+            {
+              label: "City",
+              field: "city",
+              placeholder: "Enter your city",
+            },
+          ].map(({ label, field, placeholder }) => (
+            <View key={field} style={styles.inputGroup}>
+              <Text style={styles.label}>{label}</Text>
+              <TextInput
+                style={styles.input}
+                value={formData[field]}
+                onChangeText={(text) =>
+                  setFormData((prev) => ({ ...prev, [field]: text }))
+                }
+                placeholder={placeholder}
+                placeholderTextColor="#999"
+              />
+            </View>
+          ))}
 
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Gender</Text>
             <View style={styles.genderOptions}>
-              <TouchableOpacity
-                style={[
-                  styles.genderOption,
-                  formData.gender === "male" && styles.genderOptionSelected,
-                ]}
-                onPress={() => handleGenderSelect("male")}
-              >
-                <Ionicons
-                  name="person"
-                  size={24}
-                  color={formData.gender === "male" ? "#2196F3" : "#666"}
-                />
-                <Text
+              {[
+                { label: "Male", value: "male", color: "#2196F3" },
+                { label: "Female", value: "female", color: "#E91E63" },
+                { label: "Other", value: "other", color: "#9C27B0" },
+              ].map((g) => (
+                <TouchableOpacity
+                  key={g.value}
                   style={[
-                    styles.genderOptionText,
-                    formData.gender === "male" &&
-                      styles.genderOptionTextSelected,
+                    styles.genderOption,
+                    formData.gender === g.value && styles.genderOptionSelected,
                   ]}
+                  onPress={() => handleGenderSelect(g.value)}
                 >
-                  Male
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[
-                  styles.genderOption,
-                  formData.gender === "female" && styles.genderOptionSelected,
-                ]}
-                onPress={() => handleGenderSelect("female")}
-              >
-                <Ionicons
-                  name="person"
-                  size={24}
-                  color={formData.gender === "female" ? "#E91E63" : "#666"}
-                />
-                <Text
-                  style={[
-                    styles.genderOptionText,
-                    formData.gender === "female" &&
-                      styles.genderOptionTextSelected,
-                  ]}
-                >
-                  Female
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[
-                  styles.genderOption,
-                  formData.gender === "other" && styles.genderOptionSelected,
-                ]}
-                onPress={() => handleGenderSelect("other")}
-              >
-                <Ionicons
-                  name="person"
-                  size={24}
-                  color={formData.gender === "other" ? "#9C27B0" : "#666"}
-                />
-                <Text
-                  style={[
-                    styles.genderOptionText,
-                    formData.gender === "other" &&
-                      styles.genderOptionTextSelected,
-                  ]}
-                >
-                  Other
-                </Text>
-              </TouchableOpacity>
+                  <Ionicons
+                    name="person"
+                    size={24}
+                    color={formData.gender === g.value ? g.color : "#666"}
+                  />
+                  <Text
+                    style={[
+                      styles.genderOptionText,
+                      formData.gender === g.value &&
+                        styles.genderOptionTextSelected,
+                    ]}
+                  >
+                    {g.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
             </View>
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Phone</Text>
-            <TextInput
-              style={styles.input}
-              value={formData.phone}
-              onChangeText={(text) =>
-                setFormData((prev) => ({ ...prev, phone: text }))
-              }
-              placeholder="Enter your phone number"
-              placeholderTextColor="#999"
-            />
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>City</Text>
-            <TextInput
-              style={styles.input}
-              value={formData.city}
-              onChangeText={(text) =>
-                setFormData((prev) => ({ ...prev, city: text }))
-              }
-              placeholder="Enter your city"
-              placeholderTextColor="#999"
-            />
           </View>
         </View>
       </ScrollView>
@@ -305,6 +239,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingHorizontal: 20,
     paddingVertical: 15,
+    backgroundColor: "#F7FAFF",
     borderBottomWidth: 1,
     borderBottomColor: "#E0E0E0",
   },
@@ -335,6 +270,7 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
+    backgroundColor: "#F7FAFF",
   },
   iconPreview: {
     alignItems: "center",
@@ -367,6 +303,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     fontSize: 16,
     backgroundColor: "#FFFFFF",
+    color: "#000",
   },
   genderOptions: {
     flexDirection: "row",

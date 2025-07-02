@@ -8,7 +8,6 @@ import {
   TextInput,
   Image,
   TouchableOpacity,
-  SafeAreaView,
   StatusBar,
 } from "react-native";
 import {
@@ -19,6 +18,7 @@ import {
 } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { supabase } from "../utils/supabase";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
 const featureCards = [
   {
@@ -63,6 +63,7 @@ const trendingNotes = [
 
 export default function HomePage() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const [userName, setUserName] = useState("");
 
   useEffect(() => {
@@ -71,7 +72,7 @@ export default function HomePage() {
         data: { user },
       } = await supabase.auth.getUser();
       if (user) {
-        const { data, error } = await supabase
+        const { data } = await supabase
           .from("profiles")
           .select("full_name")
           .eq("id", user.id)
@@ -89,9 +90,9 @@ export default function HomePage() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor="#F7FAFF" />
-      <View style={styles.container}>
+    <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
+      <StatusBar barStyle="dark-content" translucent backgroundColor="transparent" />
+      <View style={[styles.container, { paddingTop: insets.top }]}>
         {/* Header */}
         <View style={styles.header}>
           <View style={{ flex: 1 }}>
@@ -164,8 +165,7 @@ export default function HomePage() {
         </ScrollView>
 
         {/* Bottom Nav */}
-        {/* Bottom Nav */}
-        <View style={styles.bottomNav}>
+        <View style={[styles.bottomNav,]}>
           <View style={styles.navItemActive}>
             <Ionicons name="home" size={22} color="#4D8DFF" />
             <Text style={styles.navLabelActive}>Home</Text>
@@ -209,9 +209,8 @@ export default function HomePage() {
 }
 
 const styles = StyleSheet.create({
-  // ... same as before (unchanged styling)
   safeArea: { flex: 1, backgroundColor: "#F7FAFF" },
-  container: { flex: 1, paddingTop: 24, backgroundColor: "#F7FAFF" },
+  container: { flex: 1, backgroundColor: "#F7FAFF" },
   header: {
     flexDirection: "row",
     alignItems: "center",
@@ -331,28 +330,22 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   navItem: {
-  flex: 1,
-  alignItems: "center",
-  justifyContent: "center",
-  height: 64, // ensure same height
-},
- navItemActive: {
-  alignItems: "center",
-  justifyContent: "center",
-  flex: 1,
-  height: 64,
-  borderTopWidth: 2,
-  borderTopColor: "#4D8DFF",
-  backgroundColor: "#F7FAFF",
-  borderTopLeftRadius: 18,
-  borderTopRightRadius: 18, // 👈 Add these two
-  shadowColor: "#000",
-// shadowOpacity: 0.04,
-// shadowRadius: 4,
-// shadowOffset: { width: 0, height: -1 },
-// elevation: 3,
-},
-
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    height: 64,
+  },
+  navItemActive: {
+    alignItems: "center",
+    justifyContent: "center",
+    flex: 1,
+    height: 64,
+    borderTopWidth: 2,
+    borderTopColor: "#4D8DFF",
+    backgroundColor: "#F7FAFF",
+    borderTopLeftRadius: 18,
+    borderTopRightRadius: 18,
+  },
   navLabel: { fontSize: 12, color: "#B0B0B0", marginTop: 2 },
   navLabelActive: {
     fontSize: 12,

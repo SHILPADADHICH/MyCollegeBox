@@ -129,7 +129,7 @@ export default function UpcomingEvents() {
         )}
       />
 
-      {/* Bottom Navigation Bar */}
+      {/* Bottom Navigation Bar
       <View style={styles.bottomNav}>
         <View style={styles.navItemActive}>
           <Ionicons name="home" size={24} color="#4D8DFF" />
@@ -155,7 +155,7 @@ export default function UpcomingEvents() {
           <Ionicons name="person-outline" size={24} color="#B0B0B0" />
           <Text style={styles.navLabel}>Profile</Text>
         </View>
-      </View>
+      </View> */}
     </View>
   );
 }

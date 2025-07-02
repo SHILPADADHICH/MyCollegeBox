@@ -17,6 +17,7 @@ import {
   FontAwesome5,
   Feather,
 } from "@expo/vector-icons";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
 const { width } = Dimensions.get("window");
 
@@ -103,6 +104,7 @@ export default function ExploreScreen() {
   };
 
   return (
+    <SafeAreaView style={styles.safeArea}>
     <View style={styles.container}>
       {/* Top bar */}
       <View style={styles.topBar}>
@@ -262,7 +264,7 @@ export default function ExploreScreen() {
       <View style={styles.bottomNav}>
         <Link href="/homepage" asChild>
           <TouchableOpacity style={styles.navItem}>
-            <Ionicons name="home" size={22} color="#B0B0B0" />
+            <Ionicons name="home" size={22} color="#B0B0B0"/>
             <Text style={styles.navLabel}>Home</Text>
           </TouchableOpacity>
         </Link>
@@ -296,6 +298,7 @@ export default function ExploreScreen() {
         </Link>
       </View>
     </View>
+    </SafeAreaView>
   );
 }
 
@@ -305,6 +308,10 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#fff",
     paddingTop: 48,
+  },
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#F7FAFF',
   },
   topBar: {
     flexDirection: "row",
@@ -463,9 +470,9 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderTopLeftRadius: 18,
     borderTopRightRadius: 18,
-    shadowColor: "#000",
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
+    // shadowColor: "#000",
+    // shadowOpacity: 0.06,
+    // shadowRadius: 8,
     shadowOffset: { width: 0, height: -2 },
     elevation: 8,
   },
@@ -485,7 +492,7 @@ const styles = StyleSheet.create({
   backgroundColor: "#F7FAFF",
   borderTopLeftRadius: 18,
   borderTopRightRadius: 18, // 👈 Add these two
-  shadowColor: "#000",
+  // shadowColor: "#000",
 // shadowOpacity: 0.04,
 // shadowRadius: 4,
 // shadowOffset: { width: 0, height: -1 },
